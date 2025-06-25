@@ -1,1 +1,1 @@
-run: loadstring(game:HttpGet("https://raw.githubusercontent.com/FrostsDev/robloxcheats/new/main/Rivals/"))()
+run: loadstring(game:HttpGet("https://raw.githubusercontent.com/FrostsDev/robloxcheats/refs/heads/main/Rivals/FrostsESP-Aimbot.lua"))()
