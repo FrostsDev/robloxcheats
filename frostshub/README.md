@@ -11,3 +11,5 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/FrostsDev/robloxcheat
 
 
 # Project-Delta: 
+loadstring(game:HttpGet("https://raw.githubusercontent.com/FrostsDev/robloxcheats/refs/heads/main/frostshub/projectdelta"))()
+
