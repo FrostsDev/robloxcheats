@@ -7,6 +7,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/FrostsDev/robloxcheat
 loadstring(game:HttpGet("https://raw.githubusercontent.com/FrostsDev/robloxcheats/refs/heads/main/frostshub/brm5"))()
 
 # huntingszn:
+loadstring(game:HttpGet("https://raw.githubusercontent.com/FrostsDev/robloxcheats/refs/heads/main/frostshub/huntingszn"))()
 
 
 # Project-Delta: 
