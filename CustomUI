@@ -1,13 +1,12 @@
---[[ 
-    Frost's Custom UI Library
-    Works in executors - parents to CoreGui
-    Components: Window, Label, Button, Toggle, Slider, Textbox, Dropdown
+--[[
+    Frost's Premium UI Library
+    Animated, themed, and styled for executor use
 --]]
 
+local TweenService = game:GetService("TweenService")
 local CustomUI = {}
 CustomUI.__index = CustomUI
 
--- make frame draggable
 local function MakeDraggable(frame)
     local UIS = game:GetService("UserInputService")
     local dragging, dragInput, dragStart, startPos
@@ -41,51 +40,80 @@ local function MakeDraggable(frame)
     end)
 end
 
--- Create a new window
 function CustomUI:CreateWindow(title, width, height)
     local self = setmetatable({}, CustomUI)
 
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "CustomUI"
     ScreenGui.Parent = game.CoreGui
+    ScreenGui.IgnoreGuiInset = true
+    ScreenGui.ResetOnSpawn = false
 
-    local MainFrame = Instance.new("Frame", ScreenGui)
+    local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, width, 0, height)
     MainFrame.Position = UDim2.new(0.5, -width/2, 0.5, -height/2)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     MainFrame.BorderSizePixel = 0
-    MainFrame.Active = true
-    MakeDraggable(MainFrame)
+    MainFrame.ClipsDescendants = true
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    MainFrame.Position = UDim2.new(0.5, 0, 1.5, 0) -- start offscreen
+    MainFrame.Parent = ScreenGui
+
+    local UICorner = Instance.new("UICorner", MainFrame)
+    UICorner.CornerRadius = UDim.new(0, 10)
+
+    local Shadow = Instance.new("ImageLabel", MainFrame)
+    Shadow.BackgroundTransparency = 1
+    Shadow.Position = UDim2.new(0, -15, 0, -15)
+    Shadow.Size = UDim2.new(1, 30, 1, 30)
+    Shadow.Image = "rbxassetid://5028857084"
+    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    Shadow.ImageTransparency = 0.5
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(24, 24, 276, 276)
+    Shadow.ZIndex = 0
 
     local TitleBar = Instance.new("TextLabel", MainFrame)
-    TitleBar.Size = UDim2.new(1, 0, 0, 30)
-    TitleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    TitleBar.Size = UDim2.new(1, 0, 0, 35)
+    TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TitleBar.Font = Enum.Font.GothamBold
     TitleBar.Text = title
     TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleBar.Font = Enum.Font.SourceSansBold
     TitleBar.TextSize = 18
+    TitleBar.BorderSizePixel = 0
+
+    local TitleCorner = Instance.new("UICorner", TitleBar)
+    TitleCorner.CornerRadius = UDim.new(0, 10)
 
     local Container = Instance.new("Frame", MainFrame)
-    Container.Size = UDim2.new(1, 0, 1, -30)
-    Container.Position = UDim2.new(0, 0, 0, 30)
+    Container.Size = UDim2.new(1, -10, 1, -45)
+    Container.Position = UDim2.new(0, 5, 0, 40)
     Container.BackgroundTransparency = 1
 
     local Layout = Instance.new("UIListLayout", Container)
-    Layout.Padding = UDim.new(0, 5)
+    Layout.Padding = UDim.new(0, 6)
     Layout.SortOrder = Enum.SortOrder.LayoutOrder
 
+    -- animate window in
+    TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+        {Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+
     self.Container = Container
+    self.MainFrame = MainFrame
+    MakeDraggable(MainFrame)
     return self
 end
 
 function CustomUI:AddLabel(text)
     local lbl = Instance.new("TextLabel", self.Container)
-    lbl.Size = UDim2.new(1, -10, 0, 24)
-    lbl.BackgroundTransparency = 1
+    lbl.Size = UDim2.new(1, -10, 0, 28)
+    lbl.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.Font = Enum.Font.SourceSans
-    lbl.TextSize = 16
+    lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+
+    local corner = Instance.new("UICorner", lbl)
+    corner.CornerRadius = UDim.new(0, 6)
 end
 
 function CustomUI:AddButton(text, callback)
@@ -94,25 +122,37 @@ function CustomUI:AddButton(text, callback)
     btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.SourceSans
-    btn.TextSize = 16
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0, 6)
+
+    -- hover effect
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 80, 80)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+    end)
+
     btn.MouseButton1Click:Connect(callback)
 end
 
 function CustomUI:AddToggle(text, default, callback)
     local frame = Instance.new("Frame", self.Container)
     frame.Size = UDim2.new(1, -10, 0, 28)
-    frame.BackgroundTransparency = 1
+    frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 6)
 
     local btn = Instance.new("TextButton", frame)
     btn.Size = UDim2.new(0, 28, 1, 0)
     btn.BackgroundColor3 = default and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
     btn.Text = ""
-    btn.MouseButton1Click:Connect(function()
-        default = not default
-        btn.BackgroundColor3 = default and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
-        callback(default)
-    end)
+    btn.AutoButtonColor = false
+    local btnCorner = Instance.new("UICorner", btn)
+    btnCorner.CornerRadius = UDim.new(0, 6)
 
     local lbl = Instance.new("TextLabel", frame)
     lbl.Position = UDim2.new(0, 34, 0, 0)
@@ -120,7 +160,17 @@ function CustomUI:AddToggle(text, default, callback)
     lbl.BackgroundTransparency = 1
     lbl.Text = text
     lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
     lbl.TextXAlignment = Enum.TextXAlignment.Left
+
+    btn.MouseButton1Click:Connect(function()
+        default = not default
+        TweenService:Create(btn, TweenInfo.new(0.2), {
+            BackgroundColor3 = default and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
+        }):Play()
+        callback(default)
+    end)
 end
 
 return CustomUI
