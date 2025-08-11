@@ -1,0 +1,378 @@
+--[[
+    CustomUI_Lib - A versatile and customizable UI library for Roblox.
+]]
+
+local Library = {}
+Library.__index = Library
+
+local UserInputService = game:GetService("UserInputService")
+
+-- // Main Window Creation
+function Library.new(options)
+    local self = setmetatable({}, Library)
+
+    -- // Default options
+    options = options or {}
+    local title = options.Title or "My Custom UI"
+    local width = options.Width or 500
+    local height = options.Height or 350
+
+    -- // Main Frame
+    self.MainFrame = Instance.new("Frame")
+    self.MainFrame.Name = "CustomUI_MainFrame"
+    self.MainFrame.Size = UDim2.new(0, width, 0, height)
+    self.MainFrame.Position = UDim2.new(0.5, -width / 2, 0.5, -height / 2)
+    self.MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    self.MainFrame.BorderSizePixel = 1
+    self.MainFrame.BorderColor3 = Color3.fromRGB(50, 50, 50)
+    self.MainFrame.Active = true
+    self.MainFrame.Visible = true
+    self.MainFrame.ClipsDescendants = true
+    self.MainFrame.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    -- // Title Bar
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    titleBar.Parent = self.MainFrame
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "TitleLabel"
+    titleLabel.Size = UDim2.new(1, -30, 1, 0)
+    titleLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    titleLabel.TextColor3 = Color3.new(1, 1, 1)
+    titleLabel.Text = title
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextSize = 16
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+    titleLabel.Parent = titleBar
+
+    -- // Draggable functionality
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+
+    titleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = self.MainFrame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    titleBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            self.MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+
+    -- // Container for other elements
+    self.Container = Instance.new("ScrollingFrame")
+    self.Container.Name = "Container"
+    self.Container.Size = UDim2.new(1, -10, 1, -35)
+    self.Container.Position = UDim2.new(0, 5, 0, 30)
+    self.Container.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    self.Container.BorderSizePixel = 0
+    self.Container.ScrollBarThickness = 6
+    self.Container.Parent = self.MainFrame
+
+    self.YPadding = 10 -- Initial padding
+
+    return self
+end
+
+-- // Add a button
+function Library:Button(options)
+    options = options or {}
+    local text = options.Text or "Button"
+    local callback = options.Callback or function() end
+
+    local button = Instance.new("TextButton")
+    button.Name = "CustomButton"
+    button.Size = UDim2.new(1, -20, 0, 30)
+    button.Position = UDim2.new(0, 10, 0, self.YPadding)
+    button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.Text = text
+    button.Font = Enum.Font.SourceSans
+    button.TextSize = 14
+    button.Parent = self.Container
+
+    button.MouseButton1Click:Connect(callback)
+
+    self.YPadding = self.YPadding + 40 -- Increment Y padding for next element
+end
+
+-- // Add a slider
+function Library:Slider(options)
+    options = options or {}
+    local text = options.Text or "Slider"
+    local min = options.Min or 0
+    local max = options.Max or 100
+    local default = options.Default or 50
+    local callback = options.Callback or function(value) end
+
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Name = "SliderFrame"
+    sliderFrame.Size = UDim2.new(1, -20, 0, 40)
+    sliderFrame.Position = UDim2.new(0, 10, 0, self.YPadding)
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    sliderFrame.BorderSizePixel = 0
+    sliderFrame.Parent = self.Container
+
+    local label = Instance.new("TextLabel")
+    label.Name = "SliderLabel"
+    label.Size = UDim2.new(1, -110, 1, 0)
+    label.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Text = text
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Position = UDim2.new(0, 5, 0, 0)
+    label.Parent = sliderFrame
+
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Name = "SliderValueLabel"
+    valueLabel.Size = UDim2.new(0, 100, 1, 0)
+    valueLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    valueLabel.TextColor3 = Color3.new(1, 1, 1)
+    valueLabel.Font = Enum.Font.SourceSans
+    valueLabel.TextSize = 14
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Position = UDim2.new(1, -105, 0, 0)
+    valueLabel.Parent = sliderFrame
+
+    local slider = Instance.new("Frame")
+    slider.Name = "Slider"
+    slider.Size = UDim2.new(1, -20, 0, 4)
+    slider.Position = UDim2.new(0, 10, 0, 28)
+    slider.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    slider.Parent = sliderFrame
+
+    local progress = Instance.new("Frame")
+    progress.Name = "Progress"
+    progress.BackgroundColor3 = Color3.fromRGB(85, 170, 255)
+    progress.BorderSizePixel = 0
+    progress.Parent = slider
+
+    local handle = Instance.new("Frame")
+    handle.Name = "Handle"
+    handle.Size = UDim2.new(0, 10, 0, 10)
+    handle.Position = UDim2.new(0, -5, 0.5, -5)
+    handle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    handle.BorderSizePixel = 0
+    handle.Parent = progress
+
+    local function updateSlider(x)
+        local railWidth = slider.AbsoluteSize.X
+        local percent = math.clamp((x - slider.AbsolutePosition.X) / railWidth, 0, 1)
+        local value = min + (max - min) * percent
+        
+        progress.Size = UDim2.new(percent, 0, 1, 0)
+        valueLabel.Text = string.format("%.2f", value)
+        
+        callback(value)
+    end
+
+    local isDragging = false
+    slider.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = true
+            updateSlider(input.Position.X)
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updateSlider(input.Position.X)
+        end
+    end)
+    
+    -- Set default value
+    local percent = (default - min) / (max - min)
+    progress.Size = UDim2.new(percent, 0, 1, 0)
+    valueLabel.Text = string.format("%.2f", default)
+
+    self.YPadding = self.YPadding + 50
+end
+
+-- // Add a color picker
+function Library:ColorPicker(options)
+    options = options or {}
+    local text = options.Text or "Color Picker"
+    local defaultColor = options.Default or Color3.new(1, 1, 1)
+    local callback = options.Callback or function(color) end
+
+    local pickerFrame = Instance.new("Frame")
+    pickerFrame.Name = "ColorPickerFrame"
+    pickerFrame.Size = UDim2.new(1, -20, 0, 150)
+    pickerFrame.Position = UDim2.new(0, 10, 0, self.YPadding)
+    pickerFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    pickerFrame.BorderSizePixel = 0
+    pickerFrame.Parent = self.Container
+    
+    local label = Instance.new("TextLabel")
+    label.Name = "ColorPickerLabel"
+    label.Size = UDim2.new(1, -110, 0, 20)
+    label.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Text = text
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Position = UDim2.new(0, 5, 0, 0)
+    label.Parent = pickerFrame
+    
+    local colorPreview = Instance.new("Frame")
+    colorPreview.Name = "ColorPreview"
+    colorPreview.Size = UDim2.new(0, 20, 0, 20)
+    colorPreview.Position = UDim2.new(1, -25, 0, 0)
+    colorPreview.BackgroundColor3 = defaultColor
+    colorPreview.BorderSizePixel = 1
+    colorPreview.BorderColor3 = Color3.fromRGB(20, 20, 20)
+    colorPreview.Parent = pickerFrame
+
+    local hue, sat, val = Color3.toHSV(defaultColor)
+
+    -- // Saturation/Value Box
+    local svBox = Instance.new("Frame")
+    svBox.Name = "SVBox"
+    svBox.Size = UDim2.new(1, -20, 1, -40)
+    svBox.Position = UDim2.new(0, 10, 0, 30)
+    svBox.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+    svBox.Parent = pickerFrame
+
+    local svGradient = Instance.new("UIGradient")
+    svGradient.Name = "SVGradient"
+    svGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))})
+    svGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+    svGradient.Rotation = 90
+    svGradient.Parent = svBox
+
+    local svGradient2 = Instance.new("UIGradient")
+    svGradient2.Name = "SVGradient2"
+    svGradient2.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0, 0, 0))})
+    svGradient2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
+    svGradient2.Parent = svBox
+
+    local svHandle = Instance.new("Frame")
+    svHandle.Name = "SVHandle"
+    svHandle.Size = UDim2.new(0, 10, 0, 10)
+    svHandle.BackgroundColor3 = Color3.new(1, 1, 1)
+    svHandle.BorderSizePixel = 1
+    svHandle.BorderColor3 = Color3.new(0, 0, 0)
+    svHandle.Position = UDim2.new(sat, -5, 1 - val, -5)
+    svHandle.Parent = svBox
+    
+    -- // Hue Slider
+    local hueSlider = Instance.new("Frame")
+    hueSlider.Name = "HueSlider"
+    hueSlider.Size = UDim2.new(1, -20, 0, 10)
+    hueSlider.Position = UDim2.new(0, 10, 1, -20)
+    hueSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    hueSlider.Parent = pickerFrame
+    
+    local hueGradient = Instance.new("UIGradient")
+    hueGradient.Name = "HueGradient"
+    hueGradient.Parent = hueSlider
+    local keypoints = {}
+    for i = 0, 6 do
+        table.insert(keypoints, ColorSequenceKeypoint.new(i/6, Color3.fromHSV(i/6, 1, 1)))
+    end
+    hueGradient.Color = ColorSequence.new(keypoints)
+
+    local hueHandle = Instance.new("Frame")
+    hueHandle.Name = "HueHandle"
+    hueHandle.Size = UDim2.new(0, 5, 1, 0)
+    hueHandle.BackgroundColor3 = Color3.new(1, 1, 1)
+    hueHandle.BorderSizePixel = 1
+    hueHandle.BorderColor3 = Color3.new(0,0,0)
+    hueHandle.Position = UDim2.new(hue, -2.5, 0, 0)
+    hueHandle.Parent = hueSlider
+    
+    -- // Update logic
+    local function updateColor()
+        local newColor = Color3.fromHSV(hue, sat, val)
+        colorPreview.BackgroundColor3 = newColor
+        callback(newColor)
+    end
+    
+    local function updateHue(x)
+        local railWidth = hueSlider.AbsoluteSize.X
+        hue = math.clamp((x - hueSlider.AbsolutePosition.X) / railWidth, 0, 1)
+        svBox.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+        hueHandle.Position = UDim2.new(hue, -2.5, 0, 0)
+        updateColor()
+    end
+    
+    local function updateSV(x, y)
+        local boxSize = svBox.AbsoluteSize
+        local boxPos = svBox.AbsolutePosition
+        sat = math.clamp((x - boxPos.X) / boxSize.X, 0, 1)
+        val = 1 - math.clamp((y - boxPos.Y) / boxSize.Y, 0, 1)
+        svHandle.Position = UDim2.new(sat, -5, 1 - val, -5)
+        updateColor()
+    end
+
+    -- // Input handling for hue and sv
+    local hueDragging = false
+    local svDragging = false
+
+    hueSlider.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            hueDragging = true
+            updateHue(input.Position.X)
+        end
+    end)
+    svBox.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            svDragging = true
+            updateSV(input.Position.X, input.Position.Y)
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            hueDragging = false
+            svDragging = false
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            if hueDragging then
+                updateHue(input.Position.X)
+            elseif svDragging then
+                updateSV(input.Position.X, input.Position.Y)
+            end
+        end
+    end)
+    
+    self.YPadding = self.YPadding + 160
+end
+
+return Library
