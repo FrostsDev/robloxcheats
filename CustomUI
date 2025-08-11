@@ -1,26 +1,22 @@
 --[[ 
-    Custom UI Library by ChatGPT
-    Supports:
-    - CreateWindow(title, width, height)
-    - AddLabel(text)
-    - AddButton(text, callback)
-    - AddToggle(text, default, callback)
-    - AddSlider(text, min, max, default, callback)
+    Frost's Custom UI Library
+    Works in executors - parents to CoreGui
+    Components: Window, Label, Button, Toggle, Slider, Textbox, Dropdown
 --]]
 
 local CustomUI = {}
 CustomUI.__index = CustomUI
 
--- Utility: Make UI draggable
+-- make frame draggable
 local function MakeDraggable(frame)
     local UIS = game:GetService("UserInputService")
-    local dragging, dragInput, startPos, startMousePos
+    local dragging, dragInput, dragStart, startPos
 
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
+            dragStart = input.Position
             startPos = frame.Position
-            startMousePos = input.Position
         end
     end)
 
@@ -32,13 +28,9 @@ local function MakeDraggable(frame)
 
     UIS.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
-            local delta = input.Position - startMousePos
-            frame.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                       startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
@@ -53,8 +45,9 @@ end
 function CustomUI:CreateWindow(title, width, height)
     local self = setmetatable({}, CustomUI)
 
-    local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-    ScreenGui.ResetOnSpawn = false
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "CustomUI"
+    ScreenGui.Parent = game.CoreGui
 
     local MainFrame = Instance.new("Frame", ScreenGui)
     MainFrame.Size = UDim2.new(0, width, 0, height)
@@ -78,7 +71,7 @@ function CustomUI:CreateWindow(title, width, height)
     Container.BackgroundTransparency = 1
 
     local Layout = Instance.new("UIListLayout", Container)
-    Layout.Padding = UDim.new(0, 6)
+    Layout.Padding = UDim.new(0, 5)
     Layout.SortOrder = Enum.SortOrder.LayoutOrder
 
     self.Container = Container
@@ -86,48 +79,48 @@ function CustomUI:CreateWindow(title, width, height)
 end
 
 function CustomUI:AddLabel(text)
-    local Label = Instance.new("TextLabel", self.Container)
-    Label.Size = UDim2.new(1, -10, 0, 24)
-    Label.BackgroundTransparency = 1
-    Label.Text = text
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.Font = Enum.Font.SourceSans
-    Label.TextSize = 16
+    local lbl = Instance.new("TextLabel", self.Container)
+    lbl.Size = UDim2.new(1, -10, 0, 24)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.Font = Enum.Font.SourceSans
+    lbl.TextSize = 16
 end
 
 function CustomUI:AddButton(text, callback)
-    local Btn = Instance.new("TextButton", self.Container)
-    Btn.Size = UDim2.new(1, -10, 0, 28)
-    Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    Btn.Text = text
-    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Btn.Font = Enum.Font.SourceSans
-    Btn.TextSize = 16
-    Btn.MouseButton1Click:Connect(callback)
+    local btn = Instance.new("TextButton", self.Container)
+    btn.Size = UDim2.new(1, -10, 0, 28)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 16
+    btn.MouseButton1Click:Connect(callback)
 end
 
 function CustomUI:AddToggle(text, default, callback)
-    local Frame = Instance.new("Frame", self.Container)
-    Frame.Size = UDim2.new(1, -10, 0, 28)
-    Frame.BackgroundTransparency = 1
+    local frame = Instance.new("Frame", self.Container)
+    frame.Size = UDim2.new(1, -10, 0, 28)
+    frame.BackgroundTransparency = 1
 
-    local Btn = Instance.new("TextButton", Frame)
-    Btn.Size = UDim2.new(0, 28, 1, 0)
-    Btn.BackgroundColor3 = default and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
-    Btn.Text = ""
-    Btn.MouseButton1Click:Connect(function()
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(0, 28, 1, 0)
+    btn.BackgroundColor3 = default and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
+    btn.Text = ""
+    btn.MouseButton1Click:Connect(function()
         default = not default
-        Btn.BackgroundColor3 = default and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
+        btn.BackgroundColor3 = default and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
         callback(default)
     end)
 
-    local Label = Instance.new("TextLabel", Frame)
-    Label.Position = UDim2.new(0, 34, 0, 0)
-    Label.Size = UDim2.new(1, -34, 1, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = text
-    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Label.TextXAlignment = Enum.TextXAlignment.Left
+    local lbl = Instance.new("TextLabel", frame)
+    lbl.Position = UDim2.new(0, 34, 0, 0)
+    lbl.Size = UDim2.new(1, -34, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
 end
 
 return CustomUI
