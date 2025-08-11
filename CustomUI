@@ -1,6 +1,6 @@
 --[[
     CustomUI_Lib - A versatile and customizable UI library for Roblox.
-    Enhanced Version
+    Enhanced Version - Includes all components.
 ]]
 
 local Library = {}
@@ -12,13 +12,11 @@ local UserInputService = game:GetService("UserInputService")
 function Library.new(options)
     local self = setmetatable({}, Library)
 
-    -- // Default options
     options = options or {}
     local title = options.Title or "My Custom UI"
     local width = options.Width or 500
     local height = options.Height or 350
 
-    -- // Main Frame
     self.MainFrame = Instance.new("Frame")
     self.MainFrame.Name = "CustomUI_MainFrame"
     self.MainFrame.Size = UDim2.new(0, width, 0, height)
@@ -29,9 +27,8 @@ function Library.new(options)
     self.MainFrame.Active = true
     self.MainFrame.Visible = true
     self.MainFrame.ClipsDescendants = true
-    self.MainFrame.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    self.MainFrame.Parent = game:GetService("CoreGui")
 
-    -- // Title Bar
     local titleBar = Instance.new("Frame")
     titleBar.Name = "TitleBar"
     titleBar.Size = UDim2.new(1, 0, 0, 30)
@@ -50,7 +47,6 @@ function Library.new(options)
     titleLabel.Position = UDim2.new(0, 10, 0, 0)
     titleLabel.Parent = titleBar
 
-    -- // Draggable functionality
     local dragging, dragInput, dragStart, startPos
     titleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -70,7 +66,6 @@ function Library.new(options)
         end
     end)
 
-    -- // Container for other elements
     self.Container = Instance.new("ScrollingFrame")
     self.Container.Name = "Container"
     self.Container.Size = UDim2.new(1, 0, 1, -30)
@@ -98,367 +93,123 @@ end
 -- // Add a Label/Header
 function Library:Label(options)
     options = options or {}
-    local text = options.Text or "Label"
-
     local label = Instance.new("TextLabel")
     label.Name = "CustomLabel"
     label.Size = UDim2.new(1, -20, 0, 20)
     label.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     label.TextColor3 = Color3.fromRGB(200, 200, 200)
-    label.Text = text
+    label.Text = options.Text or "Label"
     label.Font = Enum.Font.SourceSansBold
     label.TextSize = 16
     label.TextXAlignment = Enum.TextXAlignment.Center
     label.Parent = self.Container
 end
 
-
 -- // Add a button
 function Library:Button(options)
     options = options or {}
-    local text = options.Text or "Button"
-    local callback = options.Callback or function() end
-
     local button = Instance.new("TextButton")
     button.Name = "CustomButton"
     button.Size = UDim2.new(1, -20, 0, 30)
     button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     button.TextColor3 = Color3.new(1, 1, 1)
-    button.Text = text
+    button.Text = options.Text or "Button"
     button.Font = Enum.Font.SourceSans
     button.TextSize = 14
     button.Parent = self.Container
-
-    button.MouseButton1Click:Connect(callback)
+    button.MouseButton1Click:Connect(options.Callback or function() end)
 end
 
 -- // Add a Toggle
 function Library:Toggle(options)
     options = options or {}
-    local text = options.Text or "Toggle"
-    local default = options.Default or false
+    local toggled = options.Default or false
     local callback = options.Callback or function(state) end
 
-    local toggled = default
-
     local toggleButton = Instance.new("TextButton")
-    toggleButton.Name = "ToggleButton"
-    toggleButton.Size = UDim2.new(1, -20, 0, 30)
-    toggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    toggleButton.Text = "" -- No main text
-    toggleButton.Parent = self.Container
-
+    toggleButton.Name = "ToggleButton"; toggleButton.Size = UDim2.new(1, -20, 0, 30); toggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60); toggleButton.Text = ""; toggleButton.Parent = self.Container
     local label = Instance.new("TextLabel")
-    label.Name = "ToggleLabel"
-    label.Size = UDim2.new(1, -40, 1, 0)
-    label.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.new(1, 1, 1)
-    label.Text = text
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Position = UDim2.new(0, 10, 0, 0)
-    label.Parent = toggleButton
-
+    label.Name = "ToggleLabel"; label.Size = UDim2.new(1, -40, 1, 0); label.BackgroundTransparency = 1; label.TextColor3 = Color3.new(1, 1, 1); label.Text = options.Text or "Toggle"; label.Font = Enum.Font.SourceSans; label.TextSize = 14; label.TextXAlignment = Enum.TextXAlignment.Left; label.Position = UDim2.new(0, 10, 0, 0); label.Parent = toggleButton
     local switch = Instance.new("Frame")
-    switch.Name = "Switch"
-    switch.Size = UDim2.new(0, 30, 0, 15)
-    switch.Position = UDim2.new(1, -35, 0.5, -7.5)
-    switch.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
-    switch.Parent = toggleButton
-
+    switch.Name = "Switch"; switch.Size = UDim2.new(0, 30, 0, 15); switch.Position = UDim2.new(1, -35, 0.5, -7.5); switch.BackgroundColor3 = Color3.fromRGB(120, 120, 120); switch.Parent = toggleButton
 	local switchHandle = Instance.new("Frame")
-    switchHandle.Name = "SwitchHandle"
-    switchHandle.Size = UDim2.new(0.5, 0, 1, 0)
-    switchHandle.BackgroundColor3 = Color3.new(1, 1, 1)
-    switchHandle.Parent = switch
+    switchHandle.Name = "SwitchHandle"; switchHandle.Size = UDim2.new(0.5, 0, 1, 0); switchHandle.BackgroundColor3 = Color3.new(1, 1, 1); switchHandle.Parent = switch
 
     local function updateVisual()
-        if toggled then
-            switch.BackgroundColor3 = Color3.fromRGB(85, 170, 255)
-            switchHandle:TweenPosition(UDim2.new(0.5, 0, 0, 0), "Out", "Quad", 0.1, true)
-        else
-            switch.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
-            switchHandle:TweenPosition(UDim2.new(0, 0, 0, 0), "Out", "Quad", 0.1, true)
-        end
+        if toggled then switch.BackgroundColor3 = Color3.fromRGB(85, 170, 255); switchHandle:TweenPosition(UDim2.new(0.5, 0, 0, 0), "Out", "Quad", 0.1, true)
+        else switch.BackgroundColor3 = Color3.fromRGB(120, 120, 120); switchHandle:TweenPosition(UDim2.new(0, 0, 0, 0), "Out", "Quad", 0.1, true) end
     end
-
-    toggleButton.MouseButton1Click:Connect(function()
-        toggled = not toggled
-        updateVisual()
-        callback(toggled)
-    end)
-    
+    toggleButton.MouseButton1Click:Connect(function() toggled = not toggled; updateVisual(); pcall(callback, toggled) end)
     updateVisual()
 end
 
 -- // Add a slider
 function Library:Slider(options)
     options = options or {}
-    local text = options.Text or "Slider"
-    local min = options.Min or 0
-    local max = options.Max or 100
-    local default = options.Default or 50
-    local callback = options.Callback or function(value) end
+    local sliderFrame = Instance.new("Frame"); sliderFrame.Name = "SliderFrame"; sliderFrame.Size = UDim2.new(1, -20, 0, 40); sliderFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60); sliderFrame.BorderSizePixel = 0; sliderFrame.Parent = self.Container
+    local label = Instance.new("TextLabel"); label.Name = "SliderLabel"; label.Size = UDim2.new(1, -110, 0.5, 0); label.BackgroundTransparency = 1; label.TextColor3 = Color3.new(1, 1, 1); label.Text = options.Text or "Slider"; label.Font = Enum.Font.SourceSans; label.TextSize = 14; label.TextXAlignment = Enum.TextXAlignment.Left; label.Position = UDim2.new(0, 5, 0, 0); label.Parent = sliderFrame
+    local valueLabel = Instance.new("TextLabel"); valueLabel.Name = "SliderValueLabel"; valueLabel.Size = UDim2.new(0, 100, 0.5, 0); valueLabel.BackgroundTransparency = 1; valueLabel.TextColor3 = Color3.new(1, 1, 1); valueLabel.Font = Enum.Font.SourceSans; valueLabel.TextSize = 14; valueLabel.TextXAlignment = Enum.TextXAlignment.Right; valueLabel.Position = UDim2.new(1, -105, 0, 0); valueLabel.Parent = sliderFrame
+    local slider = Instance.new("Frame"); slider.Name = "Slider"; slider.Size = UDim2.new(1, -20, 0, 4); slider.Position = UDim2.new(0, 10, 0, 28); slider.BackgroundColor3 = Color3.fromRGB(40, 40, 40); slider.Parent = sliderFrame
+    local progress = Instance.new("Frame"); progress.Name = "Progress"; progress.BackgroundColor3 = Color3.fromRGB(85, 170, 255); progress.BorderSizePixel = 0; progress.Parent = slider
+    local handle = Instance.new("Frame"); handle.Name = "Handle"; handle.Size = UDim2.new(0, 10, 0, 10); handle.Position = UDim2.new(0, -5, 0.5, -5); handle.BackgroundColor3 = Color3.new(1, 1, 1); handle.BorderSizePixel = 0; handle.Parent = progress
 
-    local sliderFrame = Instance.new("Frame")
-    sliderFrame.Name = "SliderFrame"
-    sliderFrame.Size = UDim2.new(1, -20, 0, 40)
-    sliderFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    sliderFrame.BorderSizePixel = 0
-    sliderFrame.Parent = self.Container
-
-    local label = Instance.new("TextLabel")
-    label.Name = "SliderLabel"
-    label.Size = UDim2.new(1, -110, 0.5, 0)
-    label.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.new(1, 1, 1)
-    label.Text = text
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Position = UDim2.new(0, 5, 0, 0)
-    label.Parent = sliderFrame
-
-    local valueLabel = Instance.new("TextLabel")
-    valueLabel.Name = "SliderValueLabel"
-    valueLabel.Size = UDim2.new(0, 100, 0.5, 0)
-    valueLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    valueLabel.BackgroundTransparency = 1
-    valueLabel.TextColor3 = Color3.new(1, 1, 1)
-    valueLabel.Font = Enum.Font.SourceSans
-    valueLabel.TextSize = 14
-    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    valueLabel.Position = UDim2.new(1, -105, 0, 0)
-    valueLabel.Parent = sliderFrame
-
-    local slider = Instance.new("Frame")
-    slider.Name = "Slider"
-    slider.Size = UDim2.new(1, -20, 0, 4)
-    slider.Position = UDim2.new(0, 10, 0, 28)
-    slider.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    slider.Parent = sliderFrame
-
-    local progress = Instance.new("Frame")
-    progress.Name = "Progress"
-    progress.BackgroundColor3 = Color3.fromRGB(85, 170, 255)
-    progress.BorderSizePixel = 0
-    progress.Parent = slider
-
-    local handle = Instance.new("Frame")
-    handle.Name = "Handle"
-    handle.Size = UDim2.new(0, 10, 0, 10)
-    handle.Position = UDim2.new(0, -5, 0.5, -5)
-    handle.BackgroundColor3 = Color3.new(1, 1, 1)
-    handle.BorderSizePixel = 0
-    handle.Parent = progress
-
+    local min, max, default, callback = options.Min or 0, options.Max or 100, options.Default or 50, options.Callback or function() end
     local function updateSlider(x)
-        local railWidth = slider.AbsoluteSize.X
-        local percent = math.clamp((x - slider.AbsolutePosition.X) / railWidth, 0, 1)
-        local value = min + (max - min) * percent
-        
-        progress.Size = UDim2.new(percent, 0, 1, 0)
-        valueLabel.Text = string.format("%.2f", value)
-        
-        pcall(callback, value)
+        local railWidth = slider.AbsoluteSize.X; local percent = math.clamp((x - slider.AbsolutePosition.X) / railWidth, 0, 1); local value = min + (max - min) * percent
+        progress.Size = UDim2.new(percent, 0, 1, 0); valueLabel.Text = string.format("%.2f", value); pcall(callback, value)
     end
-
     local isDragging = false
-    slider.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDragging = true
-            updateSlider(input.Position.X)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then isDragging = false end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input.Position.X) end
-    end)
-    
-    local percent = (default - min) / (max - min)
-    progress.Size = UDim2.new(percent, 0, 1, 0)
-    valueLabel.Text = string.format("%.2f", default)
+    slider.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then isDragging = true; updateSlider(input.Position.X) end end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then isDragging = false end end)
+    UserInputService.InputChanged:Connect(function(input) if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then updateSlider(input.Position.X) end end)
+    local percent = (default - min) / (max - min); progress.Size = UDim2.new(percent, 0, 1, 0); valueLabel.Text = string.format("%.2f", default)
 end
 
 -- // Add a Textbox
 function Library:Textbox(options)
     options = options or {}
-    local text = options.Text or "Textbox"
-    local default = options.Default or ""
-    local callback = options.Callback or function(value) end
-
-    local textboxFrame = Instance.new("Frame")
-    textboxFrame.Name = "TextboxFrame"
-    textboxFrame.Size = UDim2.new(1, -20, 0, 50)
-    textboxFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    textboxFrame.BorderSizePixel = 0
-    textboxFrame.Parent = self.Container
-
-    local label = Instance.new("TextLabel")
-    label.Name = "TextboxLabel"
-    label.Size = UDim2.new(1, -10, 0.5, 0)
-    label.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.new(1, 1, 1)
-    label.Text = text
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Position = UDim2.new(0, 5, 0, 0)
-    label.Parent = textboxFrame
-
-    local textbox = Instance.new("TextBox")
-    textbox.Name = "TextboxInput"
-    textbox.Size = UDim2.new(1, -10, 0, 25)
-    textbox.Position = UDim2.new(0, 5, 0, 20)
-    textbox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    textbox.TextColor3 = Color3.new(1, 1, 1)
-    textbox.PlaceholderText = "..."
-    textbox.Text = default
-    textbox.Font = Enum.Font.SourceSans
-    textbox.TextSize = 14
-    textbox.ClearTextOnFocus = false
-    textbox.Parent = textboxFrame
-
-    textbox.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            pcall(callback, textbox.Text)
-        end
-    end)
+    local textboxFrame = Instance.new("Frame"); textboxFrame.Name = "TextboxFrame"; textboxFrame.Size = UDim2.new(1, -20, 0, 50); textboxFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60); textboxFrame.BorderSizePixel = 0; textboxFrame.Parent = self.Container
+    local label = Instance.new("TextLabel"); label.Name = "TextboxLabel"; label.Size = UDim2.new(1, -10, 0.5, 0); label.BackgroundTransparency = 1; label.TextColor3 = Color3.new(1, 1, 1); label.Text = options.Text or "Textbox"; label.Font = Enum.Font.SourceSans; label.TextSize = 14; label.TextXAlignment = Enum.TextXAlignment.Left; label.Position = UDim2.new(0, 5, 0, 0); label.Parent = textboxFrame
+    local textbox = Instance.new("TextBox"); textbox.Name = "TextboxInput"; textbox.Size = UDim2.new(1, -10, 0, 25); textbox.Position = UDim2.new(0, 5, 0, 20); textbox.BackgroundColor3 = Color3.fromRGB(40, 40, 40); textbox.TextColor3 = Color3.new(1, 1, 1); textbox.PlaceholderText = "..."; textbox.Text = options.Default or ""; textbox.Font = Enum.Font.SourceSans; textbox.TextSize = 14; textbox.ClearTextOnFocus = false; textbox.Parent = textboxFrame
+    textbox.FocusLost:Connect(function(enterPressed) if enterPressed then pcall(options.Callback or function() end, textbox.Text) end end)
 end
 
 -- // Add a Dropdown
 function Library:Dropdown(options)
-    options = options or {}
-    local text = options.Text or "Dropdown"
-    local items = options.Items or {}
-    local default = options.Default or items[1]
-    local callback = options.Callback or function(item) end
-
+    options = options or {}; local items = options.Items or {}; local callback = options.Callback or function() end
     local isOpen = false
-    local dropdownFrame = Instance.new("Frame")
-    dropdownFrame.Name = "DropdownFrame"
-    dropdownFrame.Size = UDim2.new(1, -20, 0, 30)
-    dropdownFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    dropdownFrame.ClipsDescendants = true
-    dropdownFrame.Parent = self.Container
-    
-    local mainButton = Instance.new("TextButton")
-    mainButton.Name = "DropdownMainButton"
-    mainButton.Size = UDim2.new(1, 0, 1, 0)
-    mainButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    mainButton.TextColor3 = Color3.new(1, 1, 1)
-    mainButton.Text = default
-    mainButton.Font = Enum.Font.SourceSans
-    mainButton.TextSize = 14
-    mainButton.Parent = dropdownFrame
-
-    local dropdownList = Instance.new("ScrollingFrame")
-    dropdownList.Name = "DropdownList"
-    dropdownList.Size = UDim2.new(1, 0, 0, 100)
-    dropdownList.Position = UDim2.new(0, 0, 1, 0)
-    dropdownList.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    dropdownList.Visible = false
-    dropdownList.Parent = dropdownFrame
-    
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Parent = dropdownList
-
+    local dropdownFrame = Instance.new("Frame"); dropdownFrame.Name = "DropdownFrame"; dropdownFrame.Size = UDim2.new(1, -20, 0, 30); dropdownFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60); dropdownFrame.ClipsDescendants = true; dropdownFrame.Parent = self.Container
+    local mainButton = Instance.new("TextButton"); mainButton.Name = "DropdownMainButton"; mainButton.Size = UDim2.new(1, 0, 1, 0); mainButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60); mainButton.TextColor3 = Color3.new(1, 1, 1); mainButton.Text = options.Default or items[1] or ""; mainButton.Font = Enum.Font.SourceSans; mainButton.TextSize = 14; mainButton.Parent = dropdownFrame
+    local dropdownList = Instance.new("ScrollingFrame"); dropdownList.Name = "DropdownList"; dropdownList.Size = UDim2.new(1, 0, 0, 100); dropdownList.Position = UDim2.new(0, 0, 1, 0); dropdownList.BackgroundColor3 = Color3.fromRGB(50, 50, 50); dropdownList.Visible = false; dropdownList.Parent = dropdownFrame
+    local listLayout = Instance.new("UIListLayout"); listLayout.Parent = dropdownList
     for _, itemText in ipairs(items) do
-        local itemButton = Instance.new("TextButton")
-        itemButton.Name = itemText
-        itemButton.Size = UDim2.new(1, 0, 0, 25)
-        itemButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        itemButton.TextColor3 = Color3.new(1, 1, 1)
-        itemButton.Text = itemText
-        itemButton.Font = Enum.Font.SourceSans
-        itemButton.TextSize = 14
-        itemButton.Parent = dropdownList
-        
-        itemButton.MouseButton1Click:Connect(function()
-            mainButton.Text = itemText
-            pcall(callback, itemText)
-            isOpen = false
-            dropdownFrame:TweenSize(UDim2.new(1, -20, 0, 30), "Out", "Quad", 0.2, true)
-            dropdownList.Visible = false
-        end)
+        local itemButton = Instance.new("TextButton"); itemButton.Name = itemText; itemButton.Size = UDim2.new(1, 0, 0, 25); itemButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50); itemButton.TextColor3 = Color3.new(1, 1, 1); itemButton.Text = itemText; itemButton.Font = Enum.Font.SourceSans; itemButton.TextSize = 14; itemButton.Parent = dropdownList
+        itemButton.MouseButton1Click:Connect(function() mainButton.Text = itemText; pcall(callback, itemText); isOpen = false; dropdownFrame:TweenSize(UDim2.new(1, -20, 0, 30), "Out", "Quad", 0.2, true); dropdownList.Visible = false; dropdownFrame.ClipsDescendants = true end)
     end
-    
     mainButton.MouseButton1Click:Connect(function()
         isOpen = not isOpen
-        if isOpen then
-            dropdownFrame.ClipsDescendants = false
-            dropdownList.Visible = true
-            dropdownFrame:TweenSize(UDim2.new(1, -20, 0, 130), "Out", "Quad", 0.2, true)
-        else
-            dropdownFrame:TweenSize(UDim2.new(1, -20, 0, 30), "Out", "Quad", 0.2, true, function()
-                dropdownList.Visible = false
-                dropdownFrame.ClipsDescendants = true
-            end)
-        end
+        if isOpen then dropdownFrame.ClipsDescendants = false; dropdownList.Visible = true; dropdownFrame:TweenSize(UDim2.new(1, -20, 0, 130), "Out", "Quad", 0.2, true)
+        else dropdownFrame:TweenSize(UDim2.new(1, -20, 0, 30), "Out", "Quad", 0.2, true, function() dropdownList.Visible = false; dropdownFrame.ClipsDescendants = true end) end
     end)
 end
 
-
 -- // Add a color picker
 function Library:ColorPicker(options)
-    -- This function is complex and remains the same as the previous version.
-    -- For brevity, it is omitted here but should be copied from the original response.
-    -- The full code is available in the first response.
 	options = options or {}
-    local text = options.Text or "Color Picker"
-    local defaultColor = options.Default or Color3.new(1, 1, 1)
-    local callback = options.Callback or function(color) end
-
-    local pickerFrame = Instance.new("Frame")
-    pickerFrame.Name = "ColorPickerFrame"
-    pickerFrame.Size = UDim2.new(1, -20, 0, 150)
-    pickerFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    pickerFrame.BorderSizePixel = 0
-    pickerFrame.Parent = self.Container
-    
-    local label = Instance.new("TextLabel")
-    label.Name = "ColorPickerLabel"
-    label.Size = UDim2.new(1, -30, 0, 20)
-    label.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.new(1, 1, 1)
-    label.Text = text
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Position = UDim2.new(0, 5, 0, 0)
-    label.Parent = pickerFrame
-    
-    local colorPreview = Instance.new("Frame")
-    colorPreview.Name = "ColorPreview"
-    colorPreview.Size = UDim2.new(0, 20, 0, 20)
-    colorPreview.Position = UDim2.new(1, -25, 0, 0)
-    colorPreview.BackgroundColor3 = defaultColor
-    colorPreview.BorderSizePixel = 1
-    colorPreview.BorderColor3 = Color3.fromRGB(20, 20, 20)
-    colorPreview.Parent = pickerFrame
-
-    local hue, sat, val = Color3.toHSV(defaultColor)
-
-    local svBox = Instance.new("Frame")
-    svBox.Name = "SVBox"; svBox.Size = UDim2.new(1, -20, 1, -40); svBox.Position = UDim2.new(0, 10, 0, 30); svBox.BackgroundColor3 = Color3.fromHSV(hue, 1, 1); svBox.Parent = pickerFrame
+    local pickerFrame = Instance.new("Frame"); pickerFrame.Name = "ColorPickerFrame"; pickerFrame.Size = UDim2.new(1, -20, 0, 150); pickerFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60); pickerFrame.BorderSizePixel = 0; pickerFrame.Parent = self.Container
+    local label = Instance.new("TextLabel"); label.Name = "ColorPickerLabel"; label.Size = UDim2.new(1, -30, 0, 20); label.BackgroundTransparency = 1; label.TextColor3 = Color3.new(1, 1, 1); label.Text = options.Text or "Color Picker"; label.Font = Enum.Font.SourceSans; label.TextSize = 14; label.TextXAlignment = Enum.TextXAlignment.Left; label.Position = UDim2.new(0, 5, 0, 0); label.Parent = pickerFrame
+    local colorPreview = Instance.new("Frame"); colorPreview.Name = "ColorPreview"; colorPreview.Size = UDim2.new(0, 20, 0, 20); colorPreview.Position = UDim2.new(1, -25, 0, 0); colorPreview.BackgroundColor3 = options.Default or Color3.new(1,1,1); colorPreview.BorderSizePixel = 1; colorPreview.BorderColor3 = Color3.fromRGB(20, 20, 20); colorPreview.Parent = pickerFrame
+    local hue, sat, val = Color3.toHSV(options.Default or Color3.new(1,1,1)); local callback = options.Callback or function() end
+    local svBox = Instance.new("Frame"); svBox.Name = "SVBox"; svBox.Size = UDim2.new(1, -20, 1, -40); svBox.Position = UDim2.new(0, 10, 0, 30); svBox.BackgroundColor3 = Color3.fromHSV(hue, 1, 1); svBox.Parent = pickerFrame
     local svGradient = Instance.new("UIGradient"); svGradient.Name = "SVGradient"; svGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))}); svGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)}); svGradient.Rotation = 90; svGradient.Parent = svBox
     local svGradient2 = Instance.new("UIGradient"); svGradient2.Name = "SVGradient2"; svGradient2.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0, 0, 0)), ColorSequenceKeypoint.new(1, Color3.new(0, 0, 0))}); svGradient2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)}); svGradient2.Parent = svBox
     local svHandle = Instance.new("Frame"); svHandle.Name = "SVHandle"; svHandle.Size = UDim2.new(0, 10, 0, 10); svHandle.BackgroundColor3 = Color3.new(1, 1, 1); svHandle.BorderSizePixel = 1; svHandle.BorderColor3 = Color3.new(0, 0, 0); svHandle.Position = UDim2.new(sat, -5, 1 - val, -5); svHandle.Parent = svBox
     local hueSlider = Instance.new("Frame"); hueSlider.Name = "HueSlider"; hueSlider.Size = UDim2.new(1, -20, 0, 10); hueSlider.Position = UDim2.new(0, 10, 1, -20); hueSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255); hueSlider.Parent = pickerFrame
     local hueGradient = Instance.new("UIGradient"); hueGradient.Name = "HueGradient"; hueGradient.Parent = hueSlider; local keypoints = {}; for i = 0, 6 do table.insert(keypoints, ColorSequenceKeypoint.new(i/6, Color3.fromHSV(i/6, 1, 1))) end; hueGradient.Color = ColorSequence.new(keypoints)
     local hueHandle = Instance.new("Frame"); hueHandle.Name = "HueHandle"; hueHandle.Size = UDim2.new(0, 5, 1, 0); hueHandle.BackgroundColor3 = Color3.new(1, 1, 1); hueHandle.BorderSizePixel = 1; hueHandle.BorderColor3 = Color3.new(0,0,0); hueHandle.Position = UDim2.new(hue, -2.5, 0, 0); hueHandle.Parent = hueSlider
-    
     local function updateColor() local newColor = Color3.fromHSV(hue, sat, val); colorPreview.BackgroundColor3 = newColor; pcall(callback, newColor) end
     local function updateHue(x) local railWidth = hueSlider.AbsoluteSize.X; hue = math.clamp((x - hueSlider.AbsolutePosition.X) / railWidth, 0, 1); svBox.BackgroundColor3 = Color3.fromHSV(hue, 1, 1); hueHandle.Position = UDim2.new(hue, -2.5, 0, 0); updateColor() end
     local function updateSV(x, y) local boxSize = svBox.AbsoluteSize; local boxPos = svBox.AbsolutePosition; sat = math.clamp((x - boxPos.X) / boxSize.X, 0, 1); val = 1 - math.clamp((y - boxPos.Y) / boxSize.Y, 0, 1); svHandle.Position = UDim2.new(sat, -5, 1 - val, -5); updateColor() end
-    
     local hueDragging, svDragging = false, false
     hueSlider.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then hueDragging = true; updateHue(input.Position.X) end end)
     svBox.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then svDragging = true; updateSV(input.Position.X, input.Position.Y) end end)
