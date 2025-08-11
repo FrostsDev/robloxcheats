@@ -1,101 +1,105 @@
---[[
-    Frost's Premium UI Library
-    Animated, themed, and styled for executor use
---]]
+-- FrostExecutorUI v2
+-- Full glass theme + animations for exploit use
+-- Place in CoreGui via executor
 
 local TweenService = game:GetService("TweenService")
-local CustomUI = {}
-CustomUI.__index = CustomUI
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
-local function MakeDraggable(frame)
+local FrostUI = {}
+FrostUI.__index = FrostUI
+
+-- Utility: Make Draggable
+local function MakeDraggable(obj)
     local UIS = game:GetService("UserInputService")
     local dragging, dragInput, dragStart, startPos
-
-    frame.InputBegan:Connect(function(input)
+    obj.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
-            startPos = frame.Position
+            startPos = obj.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
         end
     end)
-
-    frame.InputChanged:Connect(function(input)
+    obj.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
             dragInput = input
         end
     end)
-
     UIS.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                       startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    UIS.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
+            obj.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
         end
     end)
 end
 
-function CustomUI:CreateWindow(title, width, height)
-    local self = setmetatable({}, CustomUI)
+function FrostUI:CreateWindow(title, width, height)
+    local self = setmetatable({}, FrostUI)
 
+    -- GUI Root
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Parent = game.CoreGui
     ScreenGui.IgnoreGuiInset = true
     ScreenGui.ResetOnSpawn = false
 
+    -- Main Frame
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, width, 0, height)
     MainFrame.Position = UDim2.new(0.5, -width/2, 0.5, -height/2)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    MainFrame.BackgroundTransparency = 0.15
     MainFrame.BorderSizePixel = 0
-    MainFrame.ClipsDescendants = true
     MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    MainFrame.Position = UDim2.new(0.5, 0, 1.5, 0) -- start offscreen
+    MainFrame.ClipsDescendants = true
     MainFrame.Parent = ScreenGui
 
-    local UICorner = Instance.new("UICorner", MainFrame)
-    UICorner.CornerRadius = UDim.new(0, 10)
+    -- Corner Radius
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
-    local Shadow = Instance.new("ImageLabel", MainFrame)
-    Shadow.BackgroundTransparency = 1
-    Shadow.Position = UDim2.new(0, -15, 0, -15)
-    Shadow.Size = UDim2.new(1, 30, 1, 30)
-    Shadow.Image = "rbxassetid://5028857084"
-    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    Shadow.ImageTransparency = 0.5
-    Shadow.ScaleType = Enum.ScaleType.Slice
-    Shadow.SliceCenter = Rect.new(24, 24, 276, 276)
-    Shadow.ZIndex = 0
+    -- Glassy Blur Layer
+    local Blur = Instance.new("ImageLabel", MainFrame)
+    Blur.Size = UDim2.new(1, 0, 1, 0)
+    Blur.Position = UDim2.new(0, 0, 0, 0)
+    Blur.BackgroundTransparency = 1
+    Blur.Image = "rbxassetid://8992230677" -- blurry glass texture
+    Blur.ImageTransparency = 0.2
+    Blur.ScaleType = Enum.ScaleType.Tile
+    Blur.TileSize = UDim2.new(0, 100, 0, 100)
 
+    -- Title Bar
     local TitleBar = Instance.new("TextLabel", MainFrame)
-    TitleBar.Size = UDim2.new(1, 0, 0, 35)
+    TitleBar.Size = UDim2.new(1, 0, 0, 36)
     TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 12)
     TitleBar.Font = Enum.Font.GothamBold
     TitleBar.Text = title
     TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleBar.TextSize = 18
     TitleBar.BorderSizePixel = 0
 
-    local TitleCorner = Instance.new("UICorner", TitleBar)
-    TitleCorner.CornerRadius = UDim.new(0, 10)
-
+    -- Container for elements
     local Container = Instance.new("Frame", MainFrame)
-    Container.Size = UDim2.new(1, -10, 1, -45)
-    Container.Position = UDim2.new(0, 5, 0, 40)
+    Container.Size = UDim2.new(1, -12, 1, -48)
+    Container.Position = UDim2.new(0, 6, 0, 42)
     Container.BackgroundTransparency = 1
 
     local Layout = Instance.new("UIListLayout", Container)
     Layout.Padding = UDim.new(0, 6)
     Layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    -- animate window in
-    TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-        {Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+    -- Animate in (slide + fade)
+    MainFrame.Position = UDim2.new(0.5, 0, 1.5, 0)
+    MainFrame.BackgroundTransparency = 1
+    TweenService:Create(MainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+        {Position = UDim2.new(0.5, 0, 0.5, 0), BackgroundTransparency = 0.15}):Play()
 
     self.Container = Container
     self.MainFrame = MainFrame
@@ -103,56 +107,39 @@ function CustomUI:CreateWindow(title, width, height)
     return self
 end
 
-function CustomUI:AddLabel(text)
-    local lbl = Instance.new("TextLabel", self.Container)
-    lbl.Size = UDim2.new(1, -10, 0, 28)
-    lbl.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 14
-
-    local corner = Instance.new("UICorner", lbl)
-    corner.CornerRadius = UDim.new(0, 6)
-end
-
-function CustomUI:AddButton(text, callback)
+function FrostUI:AddButton(text, callback)
     local btn = Instance.new("TextButton", self.Container)
-    btn.Size = UDim2.new(1, -10, 0, 28)
-    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.Size = UDim2.new(1, 0, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
-    local corner = Instance.new("UICorner", btn)
-    corner.CornerRadius = UDim.new(0, 6)
-
-    -- hover effect
+    -- Hover animation
     btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 80, 80)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
     end)
     btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
     end)
 
     btn.MouseButton1Click:Connect(callback)
 end
 
-function CustomUI:AddToggle(text, default, callback)
+function FrostUI:AddToggle(text, default, callback)
     local frame = Instance.new("Frame", self.Container)
-    frame.Size = UDim2.new(1, -10, 0, 28)
+    frame.Size = UDim2.new(1, 0, 0, 32)
     frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    local corner = Instance.new("UICorner", frame)
-    corner.CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0, 28, 1, 0)
-    btn.BackgroundColor3 = default and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
-    btn.Text = ""
-    btn.AutoButtonColor = false
-    local btnCorner = Instance.new("UICorner", btn)
-    btnCorner.CornerRadius = UDim.new(0, 6)
+    local toggleBtn = Instance.new("TextButton", frame)
+    toggleBtn.Size = UDim2.new(0, 28, 1, 0)
+    toggleBtn.BackgroundColor3 = default and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(200, 0, 0)
+    toggleBtn.Text = ""
+    toggleBtn.AutoButtonColor = false
+    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 8)
 
     local lbl = Instance.new("TextLabel", frame)
     lbl.Position = UDim2.new(0, 34, 0, 0)
@@ -164,13 +151,13 @@ function CustomUI:AddToggle(text, default, callback)
     lbl.TextSize = 14
     lbl.TextXAlignment = Enum.TextXAlignment.Left
 
-    btn.MouseButton1Click:Connect(function()
+    toggleBtn.MouseButton1Click:Connect(function()
         default = not default
-        TweenService:Create(btn, TweenInfo.new(0.2), {
-            BackgroundColor3 = default and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
+        TweenService:Create(toggleBtn, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
+            BackgroundColor3 = default and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(200, 0, 0)
         }):Play()
         callback(default)
     end)
 end
 
-return CustomUI
+return FrostUI
