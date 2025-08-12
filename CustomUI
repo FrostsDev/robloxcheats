@@ -1,163 +1,569 @@
--- FrostExecutorUI v2
--- Full glass theme + animations for exploit use
--- Place in CoreGui via executor
-
-local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+-- FrostUI.lua
+-- Single-file, executor-friendly custom UI lib
+-- Usage:
+-- local FrostUI = loadstring(game:HttpGet("https://.../FrostUI.lua"))()
+-- local win = FrostUI:CreateWindow("🏆 Modded Brainrot - Exploit", {Theme = "Dark"})
+-- local mainTab = win:AddTab("Main")
+-- local playerTab = win:AddTab("Player")
+-- local sec = mainTab:AddSection("Main information")
+-- sec:AddCodeBlock("Last update 06/08/2025\n\nIf you have any suggestions or ideas, feel free to contact...")
+-- local bypass = mainTab:AddSection("AntiCheat Bypass")
+-- bypass:AddToggle("Toggle bypass mode", false, function(v) print("Bypass:", v) end)
 
 local FrostUI = {}
 FrostUI.__index = FrostUI
 
--- Utility: Make Draggable
-local function MakeDraggable(obj)
-    local UIS = game:GetService("UserInputService")
-    local dragging, dragInput, dragStart, startPos
-    obj.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = obj.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Utility
+local function new(class, props)
+    local i = Instance.new(class)
+    if props then
+        for k,v in pairs(props) do
+            if k == "Parent" then
+                i.Parent = v
+            else
+                i[k] = v
+            end
         end
-    end)
-    obj.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-    UIS.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
+    end
+    return i
+end
+
+local Themes = {
+    Dark = {
+        Window = Color3.fromRGB(28, 28, 30),
+        Accent = Color3.fromRGB(40, 40, 45),
+        Text = Color3.fromRGB(230, 230, 230),
+        Muted = Color3.fromRGB(160,160,165),
+        Primary = Color3.fromRGB(100, 100, 255)
+    },
+    Light = {
+        Window = Color3.fromRGB(240, 240, 245),
+        Accent = Color3.fromRGB(220, 220, 225),
+        Text = Color3.fromRGB(30, 30, 30),
+        Muted = Color3.fromRGB(90,90,95),
+        Primary = Color3.fromRGB(40, 90, 255)
+    }
+}
+
+-- Default fonts: "Gotham", "GothamBold", "SourceSans", "SourceSansBold", "Code"
+local DEFAULT_FONT = Enum.Font.Gotham
+
+-- Create the main window
+function FrostUI:CreateWindow(title, opts)
+    opts = opts or {}
+    local themeName = opts.Theme or "Dark"
+    local theme = Themes[themeName] or Themes.Dark
+
+    -- ScreenGui
+    local screen = new("ScreenGui", {IgnoreGuiInset = true, ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = LocalPlayer:WaitForChild("PlayerGui")})
+
+    -- Main frame (window)
+    local window = new("Frame", {
+        Name = "FrostWindow",
+        Size = UDim2.new(0, 760, 0, 420),
+        Position = UDim2.new(0.5, -380, 0.5, -210),
+        AnchorPoint = Vector2.new(0.5,0.5),
+        BackgroundColor3 = theme.Window,
+        BorderSizePixel = 0,
+        Parent = screen
+    })
+
+    -- Rounded corners
+    local uicorner = new("UICorner", {CornerRadius = UDim.new(0, 10), Parent = window})
+    local shadow = new("ImageLabel", {
+        Name = "Shadow",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 24, 1, 24),
+        Position = UDim2.new(0, -12, 0, -12),
+        Image = "rbxassetid://1316045217",
+        ScaleType = Enum.ScaleType.Slice,
+        SliceCenter = Rect.new(10,10,118,118),
+        ImageColor3 = Color3.fromRGB(0,0,0),
+        ImageTransparency = 0.85,
+        Parent = window,
+        ZIndex = 0
+    }
+
+    )
+
+    -- Titlebar
+    local titlebar = new("Frame", {
+        Name = "Titlebar",
+        Size = UDim2.new(1, 0, 0, 40),
+        BackgroundTransparency = 1,
+        Parent = window
+    })
+    local titleLabel = new("TextLabel", {
+        Name = "TitleLabel",
+        Size = UDim2.new(0, 450, 1, 0),
+        Position = UDim2.new(0, 12, 0, 0),
+        BackgroundTransparency = 1,
+        Text = title or "Frost UI",
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        Font = DEFAULT_FONT,
+        TextSize = 16,
+        TextColor3 = theme.Text,
+        Parent = titlebar
+    })
+
+    -- Theme selector dropdown
+    local themeBtn = new("TextButton", {
+        Name = "ThemeBtn",
+        Size = UDim2.new(0, 120, 0, 28),
+        Position = UDim2.new(1, -140, 0.5, -14),
+        BackgroundColor3 = theme.Accent,
+        BorderSizePixel = 0,
+        Font = DEFAULT_FONT,
+        Text = "Theme: "..themeName,
+        TextSize = 13,
+        TextColor3 = theme.Text,
+        Parent = titlebar
+    })
+    local themeCorner = new("UICorner", {CornerRadius = UDim.new(0,6), Parent = themeBtn})
+
+    -- Close button (simple)
+    local closeBtn = new("TextButton", {
+        Name = "Close",
+        Size = UDim2.new(0, 28, 0, 28),
+        Position = UDim2.new(1, -42, 0.5, -14),
+        BackgroundColor3 = Color3.fromRGB(220,60,60),
+        BorderSizePixel = 0,
+        Font = DEFAULT_FONT,
+        Text = "X",
+        TextSize = 13,
+        TextColor3 = Color3.fromRGB(255,255,255),
+        Parent = titlebar
+    })
+    new("UICorner", {CornerRadius = UDim.new(0,6), Parent = closeBtn})
+
+    -- Left sidebar (tabs)
+    local sidebar = new("Frame", {
+        Name = "Sidebar",
+        Size = UDim2.new(0, 170, 1, -40),
+        Position = UDim2.new(0, 0, 0, 40),
+        BackgroundColor3 = theme.Accent,
+        BorderSizePixel = 0,
+        Parent = window
+    })
+    new("UICorner", {CornerRadius = UDim.new(0,8), Parent = sidebar})
+
+    -- Tab container
+    local tabList = new("UIListLayout", {Parent = sidebar, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder})
+    tabList.Padding = UDim.new(0,8)
+    local tabsFolder = new("Folder", {Name = "Tabs", Parent = sidebar})
+
+    -- Content area
+    local content = new("Frame", {
+        Name = "Content",
+        Size = UDim2.new(1, -170, 1, -40),
+        Position = UDim2.new(0, 170, 0, 40),
+        BackgroundColor3 = theme.Window,
+        BorderSizePixel = 0,
+        Parent = window
+    })
+    new("UICorner", {CornerRadius = UDim.new(0,8), Parent = content})
+
+    local contentUIList = new("UIListLayout", {Parent = content})
+    contentUIList.Padding = UDim.new(0,12)
+    contentUIList.HorizontalAlignment = Enum.HorizontalAlignment.Left
+
+    -- Make window draggable by titlebar
+    do
+        local dragging = false
+        local dragInput, dragStart, startPos
+
+        local function update(input)
             local delta = input.Position - dragStart
-            obj.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
+            local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            window.Position = newPos
         end
-    end)
-end
 
-function FrostUI:CreateWindow(title, width, height)
-    local self = setmetatable({}, FrostUI)
+        titlebar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                dragStart = input
+                startPos = window.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
+            end
+        end)
+        titlebar.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                dragInput = input
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                update(input)
+            end
+        end)
+    end
 
-    -- GUI Root
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Parent = game.CoreGui
-    ScreenGui.IgnoreGuiInset = true
-    ScreenGui.ResetOnSpawn = false
+    -- Helper to apply theme
+    local function applyTheme(themeTbl)
+        window.BackgroundColor3 = themeTbl.Window
+        sidebar.BackgroundColor3 = themeTbl.Accent
+        content.BackgroundColor3 = themeTbl.Window
+        titleLabel.TextColor3 = themeTbl.Text
+        themeBtn.TextColor3 = themeTbl.Text
+        themeBtn.BackgroundColor3 = themeTbl.Accent
+        closeBtn.BackgroundColor3 = Color3.fromRGB(220,60,60)
+        for _,v in pairs(sidebar:GetDescendants()) do
+            if v:IsA("TextLabel") or v:IsA("TextButton") then
+                if v.Parent == sidebar or v.Parent.Parent == sidebar or v.Parent == titlebar then
+                    v.TextColor3 = themeTbl.Text
+                end
+            end
+            if v:IsA("Frame") then
+                -- Keep it simple
+            end
+        end
+    end
 
-    -- Main Frame
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, width, 0, height)
-    MainFrame.Position = UDim2.new(0.5, -width/2, 0.5, -height/2)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    MainFrame.BackgroundTransparency = 0.15
-    MainFrame.BorderSizePixel = 0
-    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    MainFrame.ClipsDescendants = true
-    MainFrame.Parent = ScreenGui
+    applyTheme(theme)
 
-    -- Corner Radius
-    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
-
-    -- Glassy Blur Layer
-    local Blur = Instance.new("ImageLabel", MainFrame)
-    Blur.Size = UDim2.new(1, 0, 1, 0)
-    Blur.Position = UDim2.new(0, 0, 0, 0)
-    Blur.BackgroundTransparency = 1
-    Blur.Image = "rbxassetid://8992230677" -- blurry glass texture
-    Blur.ImageTransparency = 0.2
-    Blur.ScaleType = Enum.ScaleType.Tile
-    Blur.TileSize = UDim2.new(0, 100, 0, 100)
-
-    -- Title Bar
-    local TitleBar = Instance.new("TextLabel", MainFrame)
-    TitleBar.Size = UDim2.new(1, 0, 0, 36)
-    TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 12)
-    TitleBar.Font = Enum.Font.GothamBold
-    TitleBar.Text = title
-    TitleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleBar.TextSize = 18
-    TitleBar.BorderSizePixel = 0
-
-    -- Container for elements
-    local Container = Instance.new("Frame", MainFrame)
-    Container.Size = UDim2.new(1, -12, 1, -48)
-    Container.Position = UDim2.new(0, 6, 0, 42)
-    Container.BackgroundTransparency = 1
-
-    local Layout = Instance.new("UIListLayout", Container)
-    Layout.Padding = UDim.new(0, 6)
-    Layout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    -- Animate in (slide + fade)
-    MainFrame.Position = UDim2.new(0.5, 0, 1.5, 0)
-    MainFrame.BackgroundTransparency = 1
-    TweenService:Create(MainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-        {Position = UDim2.new(0.5, 0, 0.5, 0), BackgroundTransparency = 0.15}):Play()
-
-    self.Container = Container
-    self.MainFrame = MainFrame
-    MakeDraggable(MainFrame)
-    return self
-end
-
-function FrostUI:AddButton(text, callback)
-    local btn = Instance.new("TextButton", self.Container)
-    btn.Size = UDim2.new(1, 0, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-
-    -- Hover animation
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+    -- Theme dropdown logic (simple toggle between Dark/Light)
+    themeBtn.MouseButton1Click:Connect(function()
+        themeName = (themeName == "Dark") and "Light" or "Dark"
+        theme = Themes[themeName]
+        themeBtn.Text = "Theme: "..themeName
+        applyTheme(theme)
     end)
 
-    btn.MouseButton1Click:Connect(callback)
-end
-
-function FrostUI:AddToggle(text, default, callback)
-    local frame = Instance.new("Frame", self.Container)
-    frame.Size = UDim2.new(1, 0, 0, 32)
-    frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-
-    local toggleBtn = Instance.new("TextButton", frame)
-    toggleBtn.Size = UDim2.new(0, 28, 1, 0)
-    toggleBtn.BackgroundColor3 = default and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(200, 0, 0)
-    toggleBtn.Text = ""
-    toggleBtn.AutoButtonColor = false
-    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 8)
-
-    local lbl = Instance.new("TextLabel", frame)
-    lbl.Position = UDim2.new(0, 34, 0, 0)
-    lbl.Size = UDim2.new(1, -34, 1, 0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 14
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-
-    toggleBtn.MouseButton1Click:Connect(function()
-        default = not default
-        TweenService:Create(toggleBtn, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {
-            BackgroundColor3 = default and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(200, 0, 0)
-        }):Play()
-        callback(default)
+    closeBtn.MouseButton1Click:Connect(function()
+        screen:Destroy()
     end)
+
+    -- Tab API
+    local windowAPI = {}
+    windowAPI._tabs = {}
+    windowAPI._activeTab = nil
+    windowAPI._screen = screen
+    windowAPI._root = window
+    windowAPI._content = content
+    windowAPI._sidebar = sidebar
+    windowAPI._theme = theme
+    windowAPI._themeName = themeName
+
+    function windowAPI:AddTab(name)
+        local tabButton = new("TextButton", {
+            Name = name.."Button",
+            Size = UDim2.new(1, -16, 0, 40),
+            Position = UDim2.new(0, 8, 0, 0),
+            BackgroundColor3 = Color3.fromRGB(0,0,0),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Font = DEFAULT_FONT,
+            Text = "  "..name,
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextColor3 = self._theme.Text,
+            Parent = sidebar
+        })
+        local icon = new("TextLabel", { -- placeholder icon square
+            Name = "Icon",
+            Size = UDim2.new(0, 8, 0, 8),
+            Position = UDim2.new(0, 8, 0.5, -4),
+            BackgroundColor3 = theme.Primary,
+            BorderSizePixel = 0,
+            Parent = tabButton
+        })
+        new("UICorner", {CornerRadius = UDim.new(0,2), Parent = icon})
+
+        local tabFrame = new("ScrollingFrame", {
+            Name = name.."Content",
+            Size = UDim2.new(1, -180, 1, -60),
+            Position = UDim2.new(0, 180, 0, 60),
+            BackgroundTransparency = 1,
+            CanvasSize = UDim2.new(0,0,0,0),
+            ScrollBarThickness = 6,
+            Parent = self._root
+        })
+        tabFrame.Visible = false
+        local list = new("UIListLayout", {Parent = tabFrame})
+        list.Padding = UDim.new(0, 10)
+        list.SortOrder = Enum.SortOrder.LayoutOrder
+
+        -- When clicking tab, show content
+        tabButton.MouseButton1Click:Connect(function()
+            -- hide other tabs
+            for _,t in pairs(self._tabs) do
+                t.frame.Visible = false
+            end
+            tabFrame.Visible = true
+            self._activeTab = name
+        end)
+
+        -- Auto show first tab
+        if #self._tabs == 0 then
+            tabButton:CaptureFocus()
+            tabFrame.Visible = true
+            self._activeTab = name
+        end
+
+        local tabObj = {
+            name = name,
+            button = tabButton,
+            frame = tabFrame,
+            list = list
+        }
+        table.insert(self._tabs, tabObj)
+
+        -- Provide methods to add sections
+        function tabObj:AddSection(titleText)
+            local sectionFrame = new("Frame", {
+                Name = titleText:gsub("%s+","").."Section",
+                Size = UDim2.new(1, -20, 0, 120),
+                BackgroundColor3 = self.frame and self.frame.BackgroundColor3 or theme.Accent,
+                BorderSizePixel = 0,
+                Parent = tabFrame
+            })
+            new("UICorner", {CornerRadius = UDim.new(0,8), Parent = sectionFrame})
+            local title = new("TextLabel", {
+                Name = "SectionTitle",
+                Size = UDim2.new(1, -16, 0, 34),
+                Position = UDim2.new(0, 8, 0, 8),
+                BackgroundTransparency = 1,
+                Font = DEFAULT_FONT,
+                Text = titleText,
+                TextSize = 15,
+                TextColor3 = theme.Text,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Parent = sectionFrame
+            })
+            local contentHolder = new("Frame", {
+                Name = "SectionContent",
+                Size = UDim2.new(1, -16, 1, -50),
+                Position = UDim2.new(0, 8, 0, 44),
+                BackgroundTransparency = 1,
+                Parent = sectionFrame
+            })
+            local contentLayout = new("UIListLayout", {Parent = contentHolder})
+            contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            contentLayout.Padding = UDim.new(0,8)
+
+            -- Dynamically adjust section height based on content
+            local function updateSize()
+                RunService.Heartbeat:Wait()
+                local total = 44
+                for _,v in pairs(contentHolder:GetChildren()) do
+                    if v:IsA("GuiObject") then
+                        total = total + v.Size.Y.Offset + 8
+                    end
+                end
+                sectionFrame.Size = UDim2.new(1, -20, 0, math.max(84, total))
+                tabFrame.CanvasSize = UDim2.new(0, 0, 0, list.AbsoluteContentSize.Y + 16)
+            end
+
+            -- Section API
+            local sectionAPI = {}
+
+            function sectionAPI:AddLabel(text)
+                local lbl = new("TextLabel", {
+                    Name = "Label",
+                    Size = UDim2.new(1, 0, 0, 20),
+                    BackgroundTransparency = 1,
+                    Font = DEFAULT_FONT,
+                    Text = text or "",
+                    TextSize = 14,
+                    TextColor3 = theme.Muted,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = contentHolder
+                })
+                updateSize()
+                return lbl
+            end
+
+            function sectionAPI:AddButton(text, onClick)
+                local btn = new("TextButton", {
+                    Name = "Button",
+                    Size = UDim2.new(0, 180, 0, 34),
+                    BackgroundColor3 = theme.Primary,
+                    BorderSizePixel = 0,
+                    Font = DEFAULT_FONT,
+                    Text = text or "Button",
+                    TextSize = 14,
+                    TextColor3 = Color3.fromRGB(255,255,255),
+                    Parent = contentHolder
+                })
+                new("UICorner", {CornerRadius = UDim.new(0,6), Parent = btn})
+                btn.MouseButton1Click:Connect(function()
+                    pcall(onClick)
+                end)
+                updateSize()
+                return btn
+            end
+
+            function sectionAPI:AddToggle(text, default, callback)
+                default = default and true or false
+                local frame = new("Frame", {
+                    Name = "ToggleRow",
+                    Size = UDim2.new(1, 0, 0, 30),
+                    BackgroundTransparency = 1,
+                    Parent = contentHolder
+                })
+                local lbl = new("TextLabel", {
+                    Name = "TLabel",
+                    Size = UDim2.new(1, -70, 1, 0),
+                    BackgroundTransparency = 1,
+                    Font = DEFAULT_FONT,
+                    Text = text or "Toggle",
+                    TextSize = 14,
+                    TextColor3 = theme.Text,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = frame
+                })
+                local toggle = new("Frame", {
+                    Name = "Toggle",
+                    Size = UDim2.new(0, 46, 0, 24),
+                    Position = UDim2.new(1, -54, 0.5, -12),
+                    BackgroundColor3 = Color3.fromRGB(200,200,200),
+                    BorderSizePixel = 0,
+                    Parent = frame
+                })
+                new("UICorner", {CornerRadius = UDim.new(0,12), Parent = toggle})
+                local knob = new("Frame", {
+                    Name = "Knob",
+                    Size = UDim2.new(0,20,0,20),
+                    Position = UDim2.new(default and 1 or 0, default and -24 or 4, 0, 2),
+                    BackgroundColor3 = Color3.fromRGB(255,255,255),
+                    BorderSizePixel = 0,
+                    Parent = toggle
+                })
+                new("UICorner", {CornerRadius = UDim.new(0,10), Parent = knob})
+
+                local state = default
+
+                local function setState(val, silent)
+                    state = not not val
+                    local goal = {}
+                    if state then
+                        goal.Position = UDim2.new(1, -24, 0, 2)
+                        toggle.BackgroundColor3 = theme.Primary
+                    else
+                        goal.Position = UDim2.new(0, 4, 0, 2)
+                        toggle.BackgroundColor3 = Color3.fromRGB(120,120,120)
+                    end
+                    TweenService:Create(knob, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {Position = goal.Position}):Play()
+                    if callback and not silent then
+                        pcall(callback, state)
+                    end
+                end
+
+                toggle.InputBegan:Connect(function()
+                    setState(not state)
+                end)
+                setState(state, true)
+                updateSize()
+                return {
+                    Get = function() return state end,
+                    Set = function(v) setState(v) end
+                }
+            end
+
+            function sectionAPI:AddTextbox(placeholder, onEnter)
+                local box = new("TextBox", {
+                    Name = "Textbox",
+                    Size = UDim2.new(1, 0, 0, 30),
+                    BackgroundColor3 = theme.Accent,
+                    BorderSizePixel = 0,
+                    Font = DEFAULT_FONT,
+                    Text = "",
+                    PlaceholderText = placeholder or "",
+                    TextSize = 14,
+                    TextColor3 = theme.Text,
+                    Parent = contentHolder
+                })
+                new("UICorner", {CornerRadius = UDim.new(0,6), Parent = box})
+                box.FocusLost:Connect(function(enterPressed)
+                    if enterPressed then
+                        pcall(onEnter, box.Text)
+                    end
+                end)
+                updateSize()
+                return box
+            end
+
+            function sectionAPI:AddCodeBlock(text)
+                local frame = new("Frame", {
+                    Name = "CodeBlock",
+                    Size = UDim2.new(1, 0, 0, 160),
+                    BackgroundColor3 = theme.Accent,
+                    BorderSizePixel = 0,
+                    Parent = contentHolder
+                })
+                new("UICorner", {CornerRadius = UDim.new(0,6), Parent = frame})
+                local box = new("TextBox", {
+                    Name = "CodeText",
+                    Size = UDim2.new(1, -16, 1, -16),
+                    Position = UDim2.new(0,8,0,8),
+                    BackgroundTransparency = 1,
+                    Text = text or "",
+                    ClearTextOnFocus = false,
+                    MultiLine = true,
+                    Font = Enum.Font.Code,
+                    TextSize = 13,
+                    TextWrapped = true,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextYAlignment = Enum.TextYAlignment.Top,
+                    TextColor3 = theme.Text,
+                    Parent = frame
+                })
+                box:GetPropertyChangedSignal("Text"):Connect(function()
+                    -- nothing for now
+                end)
+                updateSize()
+                return box
+            end
+
+            function sectionAPI:AddSpacer(px)
+                local s = new("Frame", {Size = UDim2.new(1,0,0,px or 8), BackgroundTransparency = 1, Parent = contentHolder})
+                updateSize()
+                return s
+            end
+
+            updateSize()
+            return sectionAPI
+        end
+
+        return tabObj
+    end
+
+    -- Return window API
+    setmetatable(windowAPI, {__index = FrostUI})
+    return windowAPI
 end
 
-return FrostUI
+-- Allow module call syntax
+return setmetatable(FrostUI, {
+    __call = function(_, ...) return FrostUI:CreateWindow(...) end
+})
+
+-- ===== Example usage (paste below your module or in another script) =====
+--[[
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/your/repo/main/FrostUI.lua"))() -- or require your module
+local win = UI:CreateWindow("🏆 Modded Brainrot - Exploit", {Theme = "Dark"})
+local main = win:AddTab("Main")
+local player = win:AddTab("Player")
+
+local infoSection = main:AddSection("Main information")
+infoSection:AddCodeBlock("Information about the script\n\n1) Last update 06/08/2025\n\nIf you have any suggestions or ideas, feel free to contact me.\nThank you for using my script!")
+
+local acSection = main:AddSection("AntiCheat Bypass")
+acSection:AddLabel("Toggle bypass mode (may not work)")
+acSection:AddToggle("AntiCheat Bypass", false, function(v) print("Bypass:", v) end)
+
+local controls = player:AddSection("Player Controls")
+controls:AddButton("Heal Player", function() print("Heal") end)
+controls:AddTextbox("Enter player name", function(val) print("Textbox enter:", val) end)
+]]--
