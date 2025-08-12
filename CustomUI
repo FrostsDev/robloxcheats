@@ -1,4 +1,4 @@
--- FrostUI.lua - Refactored for Cleanliness and Visual Polish
+-- FrostUI.lua - Refactored for the new "Amorestar" design
 -- Single-file, executor-friendly custom UI lib
 
 local FrostUI = {}
@@ -11,54 +11,39 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
---[[
-IMPROVEMENT: Centralized Configuration
-- All styling and layout values are in one place.
-- Easily tweak the entire UI's appearance without hunting through the code.
-]]
+-- Centralized Configuration
 local Config = {
 	Fonts = {
 		Default = Enum.Font.Gotham,
 		Bold = Enum.Font.GothamBold,
 		Code = Enum.Font.Code,
 	},
-	Padding = {
-		Window = UDim.new(0, 12),
-		Section = UDim.new(0, 8),
-		Tab = UDim.new(0, 8),
+	Icons = {
+		-- Using Unicode characters as placeholders. For best results, replace with ImageLabels and rbxassetids.
+		Trophy = "🏆",
+		Minimize = "—",
+		Maximize = "🗖",
+		Close = "✕",
+		TabMain = "◆", -- Placeholder icon
+		TabPlayer = "★", -- Placeholder icon
+		Copy = "❐",
+		Toggle = "👆"
 	},
-	Radii = {
-		Window = UDim.new(0, 8),
-		Section = UDim.new(0, 6),
-		Button = UDim.new(0, 5),
-		Input = UDim.new(0, 5),
-	},
-	Durations = {
-		TabChange = 0.2,
-		Hover = 0.15,
-		Toggle = 0.2,
-	}
-}
-
--- Theme Palette
-local Themes = {
-	Dark = {
-		Window = Color3.fromRGB(28, 28, 30),
-		Accent = Color3.fromRGB(40, 40, 45), -- For sidebars, sections
-		Input = Color3.fromRGB(20, 20, 22),   -- For textboxes, code blocks
-		Text = Color3.fromRGB(230, 230, 230),
-		Muted = Color3.fromRGB(160, 160, 165),
-		Primary = Color3.fromRGB(80, 100, 255),
-		Border = Color3.fromRGB(60, 60, 65),
-	},
-	Light = {
-		Window = Color3.fromRGB(242, 242, 247),
-		Accent = Color3.fromRGB(229, 229, 234),
-		Input = Color3.fromRGB(255, 255, 255),
-		Text = Color3.fromRGB(28, 28, 30),
-		Muted = Color3.fromRGB(90, 90, 95),
-		Primary = Color3.fromRGB(0, 122, 255),
-		Border = Color3.fromRGB(200, 200, 205),
+	Themes = {
+		Dark = {
+			Window = Color3.fromRGB(36, 36, 41),
+			Accent = Color3.fromRGB(28, 28, 32),   -- Sidebar
+			Section = Color3.fromRGB(44, 44, 50),  -- Codeblock/control backgrounds
+			Text = Color3.fromRGB(230, 230, 230),
+			Muted = Color3.fromRGB(160, 160, 165),
+			Primary = Color3.fromRGB(0, 122, 255), -- Blue for highlights
+			CodeSyntax = {
+				Default = Color3.fromRGB(220, 220, 220),
+				Keyword = Color3.fromRGB(255, 90, 140), -- 'or', 'and'
+				Number = Color3.fromRGB(100, 220, 255), -- '06/08/2025'
+			}
+		},
+		-- Light theme can be configured here similarly
 	}
 }
 
@@ -71,16 +56,6 @@ local function new(class, props)
 	return inst
 end
 
--- Adds hover effects to a button-like object
-local function addHoverEffect(obj, baseColor, hoverColor)
-	obj.MouseEnter:Connect(function()
-		TweenService:Create(obj, TweenInfo.new(Config.Durations.Hover), {BackgroundColor3 = hoverColor}):Play()
-	end)
-	obj.MouseLeave:Connect(function()
-		TweenService:Create(obj, TweenInfo.new(Config.Durations.Hover), {BackgroundColor3 = baseColor}):Play()
-	end)
-end
-
 -- The main window creation function
 function FrostUI:CreateWindow(title, opts)
 	opts = opts or {}
@@ -89,268 +64,155 @@ function FrostUI:CreateWindow(title, opts)
 	-- State
 	self._tabs = {}
 	self._activeTab = nil
-	self._themeName = opts.Theme or "Dark"
-	self._theme = Themes[self._themeName]
-
-	-- Themed elements registry
-	self._themedElements = {}
+	self._theme = Config.Themes[opts.Theme or "Dark"]
 
 	-- Create base GUI
 	self._screen = new("ScreenGui", {IgnoreGuiInset = true, ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Parent = LocalPlayer:WaitForChild("PlayerGui")})
 	self._root = new("Frame", {
 		Name = "FrostWindow",
-		Size = UDim2.new(0, 760, 0, 420),
-		Position = UDim2.new(0.5, -380, 0.5, -210),
+		Size = UDim2.new(0, 780, 0, 480),
+		Position = UDim2.new(0.5, -390, 0.5, -240),
 		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = self._theme.Window,
 		BorderSizePixel = 0,
 		Parent = self._screen,
 	})
-	new("UICorner", {CornerRadius = Config.Radii.Window, Parent = self._root})
-	
-	-- Shadow (unchanged)
-	new("ImageLabel", { Name = "Shadow", BackgroundTransparency = 1, Size = UDim2.new(1, 24, 1, 24), Position = UDim2.new(0, -12, 0, -12), Image = "rbxassetid://1316045217", ScaleType = Enum.ScaleType.Slice, SliceCenter = Rect.new(10,10,118,118), ImageColor3 = Color3.fromRGB(0,0,0), ImageTransparency = 0.85, Parent = self._root, ZIndex = 0 })
+	new("UICorner", {CornerRadius = UDim.new(0, 12), Parent = self._root})
+	new("ImageLabel", { Name = "Shadow", BackgroundTransparency = 1, Size = UDim2.new(1, 24, 1, 24), Position = UDim2.new(0, -12, 0, -12), Image = "rbxassetid://1316045217", ScaleType = Enum.ScaleType.Slice, SliceCenter = Rect.new(10,10,118,118), ImageColor3 = Color3.fromRGB(0,0,0), ImageTransparency = 0.8, Parent = self._root, ZIndex = -1 })
 
 	-- Title Bar
-	local titlebar = new("Frame", { Name = "Titlebar", Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Parent = self._root })
-	self._titleLabel = new("TextLabel", { Name = "TitleLabel", Size = UDim2.new(0, 450, 1, 0), Position = UDim2.new(0, 12, 0, 0), BackgroundTransparency = 1, Text = title or "Frost UI", TextXAlignment = Enum.TextXAlignment.Left, Font = Config.Fonts.Bold, TextSize = 16, Parent = titlebar })
+	local titlebar = new("Frame", { Name = "Titlebar", Size = UDim2.new(1, 0, 0, 50), BackgroundTransparency = 1, Parent = self._root })
+	
+	new("TextLabel", { Name = "TitleIcon", Size = UDim2.new(0, 30, 0, 30), Position = UDim2.new(0, 15, 0.5, -15), BackgroundTransparency = 1, Text = Config.Icons.Trophy, Font = Config.Fonts.Bold, TextSize = 20, TextColor3 = self._theme.Text, Parent = titlebar })
+	new("TextLabel", { Name = "TitleLabel", Size = UDim2.new(0, 450, 0, 22), Position = UDim2.new(0, 45, 0, 5), BackgroundTransparency = 1, Text = title or "Frost UI", TextXAlignment = Enum.TextXAlignment.Left, Font = Config.Fonts.Bold, TextSize = 16, TextColor3 = self._theme.Text, Parent = titlebar })
+	new("TextLabel", { Name = "SubtitleLabel", Size = UDim2.new(0, 450, 0, 20), Position = UDim2.new(0, 45, 0, 25), BackgroundTransparency = 1, Text = "Powered by amorestar", TextXAlignment = Enum.TextXAlignment.Left, Font = Config.Fonts.Default, TextSize = 12, TextColor3 = self._theme.Muted, Parent = titlebar })
 
-	-- Close Button
-	local closeBtn = new("TextButton", { Name = "Close", Size = UDim2.new(0, 28, 0, 28), Position = UDim2.new(1, -40, 0.5, -14), Font = Config.Fonts.Default, Text = "✕", TextSize = 14, TextColor3 = Color3.fromRGB(255, 255, 255), BorderSizePixel = 0, Parent = titlebar })
-	new("UICorner", {CornerRadius = Config.Radii.Button, Parent = closeBtn})
-	table.insert(self._themedElements, { obj = closeBtn, prop = "BackgroundColor3", value = function(theme) return Color3.fromRGB(230, 60, 60) end })
-	closeBtn.MouseEnter:Connect(function() TweenService:Create(closeBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(255, 80, 80)}):Play() end)
-	closeBtn.MouseLeave:Connect(function() TweenService:Create(closeBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(230, 60, 60)}):Play() end)
-	closeBtn.MouseButton1Click:Connect(function() self._screen:Destroy() end)
+	-- Window Controls
+	local controls = new("Frame", { Name = "Controls", Size = UDim2.new(0, 120, 1, 0), Position = UDim2.new(1, -120, 0, 0), BackgroundTransparency = 1, Parent = titlebar })
+	local closeBtn = new("TextButton", { Name = "Close", Size = UDim2.new(0, 32, 0, 32), Position = UDim2.new(1, -32, 0.5, -16), BackgroundTransparency = 1, Font = Config.Fonts.Default, Text = Config.Icons.Close, TextSize = 16, TextColor3 = self._theme.Muted, Parent = controls })
+	local maxBtn = new("TextButton", { Name = "Maximize", Size = UDim2.new(0, 32, 0, 32), Position = UDim2.new(1, -64, 0.5, -16), BackgroundTransparency = 1, Font = Config.Fonts.Default, Text = Config.Icons.Maximize, TextSize = 16, TextColor3 = self._theme.Muted, Parent = controls })
+	local minBtn = new("TextButton", { Name = "Minimize", Size = UDim2.new(0, 32, 0, 32), Position = UDim2.new(1, -96, 0.5, -16), BackgroundTransparency = 1, Font = Config.Fonts.Default, Text = Config.Icons.Minimize, TextSize = 16, TextColor3 = self._theme.Muted, Parent = controls })
 
 	-- Sidebar
-	self._sidebar = new("Frame", { Name = "Sidebar", Size = UDim2.new(0, 170, 1, -40), Position = UDim2.new(0, 0, 0, 40), BorderSizePixel = 0, Parent = self._root })
-	local tabList = new("UIListLayout", { Parent = self._sidebar, Padding = Config.Padding.Tab, SortOrder = Enum.SortOrder.LayoutOrder })
-
-	--[[
-	IMPROVEMENT: Visual Polish
-	- An animated indicator bar smoothly tweens between selected tabs.
-	- This provides a much cleaner and more modern feel than just changing text color.
-	]]
-	self._tabIndicator = new("Frame", {
-		Name = "TabIndicator",
-		Size = UDim2.new(0, 3, 0, 24),
-		Position = UDim2.new(0, 4, 0, 8), -- Starts at the first tab's position
-		BackgroundColor3 = self._theme.Primary,
-		BorderSizePixel = 0,
-		ZIndex = 2,
-		Parent = self._sidebar,
-		Visible = false
-	})
-	new("UICorner", {CornerRadius = UDim.new(1, 0), Parent = self._tabIndicator})
+	self._sidebar = new("Frame", { Name = "Sidebar", Size = UDim2.new(0, 170, 1, -50), Position = UDim2.new(0, 0, 0, 50), BackgroundColor3 = self._theme.Accent, BorderSizePixel = 0, Parent = self._root })
+	new("UIListLayout", { Parent = self._sidebar, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center })
 
 	-- Content Area
-	self._content = new("Frame", { Name = "Content", Size = UDim2.new(1, -170, 1, -40), Position = UDim2.new(0, 170, 0, 40), BackgroundTransparency = 1, BorderSizePixel = 0, Parent = self._root })
+	self._content = new("Frame", { Name = "Content", Size = UDim2.new(1, -170, 1, -50), Position = UDim2.new(0, 170, 0, 50), BackgroundTransparency = 1, BorderSizePixel = 0, Parent = self._root })
 
-	-- Window Drag Logic (unchanged, it's already good)
-	do
-		local dragging, dragStart, startPos
-		titlebar.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				dragging, dragStart, startPos = true, input.Position, self._root.Position
-			end
-		end)
-		titlebar.InputEnded:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-		end)
-		UserInputService.InputChanged:Connect(function(input)
-			if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-				local delta = input.Position - dragStart
-				self._root.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			end
-		end)
-	end
+	-- Window Drag Logic
+	titlebar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then local dragStart, startPos = input.Position, self._root.Position; local conn; conn = UserInputService.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement then self._root.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + (i.Position.X - dragStart.X), startPos.Y.Scale, startPos.Y.Offset + (i.Position.Y - dragStart.Y)) end end); local conn2; conn2 = titlebar.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then conn:Disconnect() conn2:Disconnect() end end) end end)
+	closeBtn.MouseButton1Click:Connect(function() self._screen:Destroy() end)
 	
-	-- Initial theme application
-	self:_applyTheme()
-
 	return self
 end
 
---[[
-IMPROVEMENT: Efficient Theming
-- Instead of using GetDescendants(), we register elements that need theming.
-- This is far more performant and easier to manage.
-]]
-function FrostUI:_applyTheme()
-	local theme = self._theme
-	self._root.BackgroundColor3 = theme.Window
-	self._sidebar.BackgroundColor3 = theme.Accent
-	self._titleLabel.TextColor3 = theme.Text
-	self._tabIndicator.BackgroundColor3 = theme.Primary
-	
-	for _, item in ipairs(self._themedElements) do
-		item.obj[item.prop] = type(item.value) == "function" and item.value(theme) or theme[item.value]
-	end
-end
+function FrostUI:AddTab(name, icon)
+	local tabButton = new("TextButton", { Name = name .. "Button", Size = UDim2.new(1, -24, 0, 40), BackgroundTransparency = 1, Font = Config.Fonts.Default, Text = "  " .. name, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = self._theme.Muted, Parent = self._sidebar })
+	local tabIcon = new("TextLabel", { Name = "Icon", Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(0, 15, 0.5, -10), BackgroundTransparency = 1, Font = Config.Fonts.Bold, Text = icon or "", TextSize = 18, TextColor3 = self._theme.Muted, Parent = tabButton })
 
-function FrostUI:AddTab(name)
-	local theme = self._theme
+	local tabFrame = new("ScrollingFrame", { Name = name .. "Content", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollingDirection = Enum.ScrollingDirection.Y, ScrollBarThickness = 4, CanvasSize = UDim2.new(), Visible = false, Parent = self._content })
+	local list = new("UIListLayout", { Parent = tabFrame, Padding = UDim.new(0, 16), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, })
 
-	-- Tab Button in Sidebar
-	local tabButton = new("TextButton", {
-		Name = name .. "Button",
-		Size = UDim2.new(1, -16, 0, 32),
-		Position = UDim2.new(0.5, 0, 0, 0),
-		AnchorPoint = Vector2.new(0.5, 0),
-		BackgroundTransparency = 1,
-		Font = Config.Fonts.Default,
-		Text = "  " .. name,
-		TextSize = 14,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = self._sidebar
-	})
-	table.insert(self._themedElements, { obj = tabButton, prop = "TextColor3", value = "Text" })
-
-	-- Content Frame for the Tab
-	local tabFrame = new("ScrollingFrame", {
-		Name = name .. "Content",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		ScrollBarThickness = 6,
-		CanvasSize = UDim2.new(),
-		Visible = false,
-		Parent = self._content
-	})
-	local list = new("UIListLayout", {
-		Parent = tabFrame,
-		Padding = Config.Padding.Window,
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-	})
-
-	local tabObj = {
-		name = name,
-		button = tabButton,
-		frame = tabFrame,
-		list = list,
-		_sections = {}
-	}
+	local tabObj = { name = name, button = tabButton, icon = tabIcon, frame = tabFrame, list = list }
 	self._tabs[name] = tabObj
-
-	tabButton.MouseButton1Click:Connect(function()
-		self:SetActiveTab(name)
-	end)
-
-	-- Auto-select the first tab
-	if not self._activeTab then
-		self:SetActiveTab(name)
-		self._tabIndicator.Visible = true
-	end
 	
-	-- Return an API for this specific tab
+	tabButton.MouseButton1Click:Connect(function() self:SetActiveTab(name) end)
+
+	if not self._activeTab then self:SetActiveTab(name) end
+	
 	local tabAPI = {}
-	function tabAPI:AddSection(titleText)
-		return self:_createSection(tabObj, titleText)
-	end
-	
+	function tabAPI:AddSection(titleText) return self:_createSection(tabObj, titleText) end
 	return tabAPI
 end
 
 function FrostUI:SetActiveTab(name)
 	if self._activeTab == name or not self._tabs[name] then return end
 
-	local oldTab = self._tabs[self._activeTab]
-	if oldTab then
+	if self._activeTab and self._tabs[self._activeTab] then
+		local oldTab = self._tabs[self._activeTab]
 		oldTab.frame.Visible = false
-		oldTab.button.Font = Config.Fonts.Default
+		oldTab.button.TextColor3 = self._theme.Muted
+		oldTab.icon.TextColor3 = self._theme.Muted
 	end
 
 	local newTab = self._tabs[name]
 	newTab.frame.Visible = true
-	newTab.button.Font = Config.Fonts.Bold
+	newTab.button.TextColor3 = self._theme.Text
+	newTab.icon.TextColor3 = self._theme.Text
 	self._activeTab = name
-
-	-- Animate tab indicator
-	local goalPos = UDim2.new(0, 4, 0, newTab.button.AbsolutePosition.Y - self._sidebar.AbsolutePosition.Y)
-	TweenService:Create(self._tabIndicator, TweenInfo.new(Config.Durations.TabChange, Enum.EasingStyle.Quint), { Position = goalPos }):Play()
 end
 
-
---[[
-IMPROVEMENT: Component-Based and Automated Layout
-- Sections and their components are created by dedicated functions.
-- `_updateSectionHeight` automatically resizes sections and the scroll area, removing the need for manual `updateSize()` calls.
-]]
 function FrostUI:_createSection(parentTab, titleText)
-	local theme = self._theme
-	local sectionFrame = new("Frame", {
-		Name = titleText:gsub("%s+", "") .. "Section",
-		Size = UDim2.new(1, -24, 0, 100), -- Initial height, will auto-adjust
-		BackgroundTransparency = 1,
-		BorderSizePixel = 1,
-		Parent = parentTab.frame,
-	})
-	new("UICorner", { CornerRadius = Config.Radii.Section, Parent = sectionFrame })
-	table.insert(self._themedElements, {obj = sectionFrame, prop = "BackgroundColor3", value = "Accent"})
-	table.insert(self._themedElements, {obj = sectionFrame, prop = "BorderColor3", value = "Border"})
-
-	local title = new("TextLabel", { Name = "SectionTitle", Size = UDim2.new(1, -24, 0, 30), Position = UDim2.new(0, 12, 0, 0), Font = Config.Fonts.Bold, Text = titleText, TextSize = 15, TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left, BackgroundTransparency = 1, Parent = sectionFrame })
-	table.insert(self._themedElements, {obj = title, prop = "TextColor3", value = "Text"})
-
-	local contentHolder = new("Frame", { Name = "SectionContent", Size = UDim2.new(1, -24, 1, -38), Position = UDim2.new(0, 12, 0, 30), BackgroundTransparency = 1, Parent = sectionFrame })
-	local contentLayout = new("UIListLayout", { Parent = contentHolder, Padding = Config.Padding.Section, SortOrder = Enum.SortOrder.LayoutOrder })
+	-- A section is now just a title and a content holder with a layout
+	local contentHolder = new("Frame", { Name = titleText .. "Content", AutomaticSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, -24, 0, 0), BackgroundTransparency = 1, Parent = parentTab.frame })
+	local contentLayout = new("UIListLayout", { Parent = contentHolder, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder })
+	local title = new("TextLabel", { Name = "SectionTitle", Size = UDim2.new(1, 0, 0, 30), BackgroundTransparency = 1, Font = Config.Fonts.Bold, Text = titleText, TextSize = 16, TextColor3 = self._theme.Text, TextXAlignment = Enum.TextXAlignment.Left, Parent = contentHolder, LayoutOrder = 0 })
 	
-	local function updateSectionHeight()
-		RunService.Heartbeat:Wait() -- Wait a frame for layout to compute
-		local contentHeight = contentLayout.AbsoluteContentSize.Y
-		sectionFrame.Size = UDim2.new(1, -24, 0, contentHeight + 38)
+	-- Function to update the scrolling canvas size
+	local function updateCanvas()
+		RunService.Heartbeat:Wait()
 		parentTab.frame.CanvasSize = UDim2.new(0, 0, 0, parentTab.list.AbsoluteContentSize.Y)
 	end
-
-	-- Automate resizing
-	contentHolder.ChildAdded:Connect(updateSectionHeight)
-	contentHolder.ChildRemoved:Connect(updateSectionHeight)
-
+	contentHolder.ChildAdded:Connect(updateCanvas)
+	contentHolder.ChildRemoved:Connect(updateCanvas)
+	
 	-- Section API
 	local sectionAPI = {}
-	function sectionAPI:AddButton(text, onClick)
-		local btn = new("TextButton", { Name = "Button", Size = UDim2.new(1, 0, 0, 32), BackgroundColor3 = theme.Primary, BorderSizePixel = 0, Font = Config.Fonts.Default, Text = text or "Button", TextSize = 14, TextColor3 = Color3.fromRGB(255, 255, 255), Parent = contentHolder })
-		new("UICorner", { CornerRadius = Config.Radii.Button, Parent = btn })
-		btn.MouseButton1Click:Connect(function() pcall(onClick) end)
-		addHoverEffect(btn, theme.Primary, theme.Primary:Lerp(Color3.new(1,1,1), 0.2))
-		table.insert(self._themedElements, {obj = btn, prop = "BackgroundColor3", value = "Primary"})
+	
+	function sectionAPI:AddCodeBlock(blockTitle, text)
+		local frame = new("Frame", { Name = "CodeBlock", Size = UDim2.new(1, 0, 0, 200), BackgroundColor3 = self._theme.Section, Parent = contentHolder })
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = frame })
+		local listLayout = new("UIListLayout", { Parent = frame, Padding = UDim.new(0, 0) })
+		
+		-- Header
+		local header = new("Frame", { Name = "Header", Size = UDim2.new(1, 0, 0, 32), BackgroundTransparency = 1, Parent = frame })
+		local dots = new("Frame", { Name = "Dots", Size = UDim2.new(0, 80, 1, 0), Position = UDim2.new(0, 10, 0, 0), BackgroundTransparency = 1, Parent = header })
+		local dotLayout = new("UIListLayout", { Parent = dots, FillDirection = Enum.FillDirection.Horizontal, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 6) })
+		new("Frame", { BackgroundColor3 = Color3.fromRGB(255, 95, 87), Size = UDim2.new(0, 12, 0, 12), Parent = dots, BorderSizePixel = 0, ["Name"] = "Red"   , ZIndex = 2, children = {new("UICorner", {CornerRadius = UDim.new(1,0)})} })
+		new("Frame", { BackgroundColor3 = Color3.fromRGB(254, 189, 47), Size = UDim2.new(0, 12, 0, 12), Parent = dots, BorderSizePixel = 0, ["Name"] = "Yellow", ZIndex = 2, children = {new("UICorner", {CornerRadius = UDim.new(1,0)})} })
+		new("Frame", { BackgroundColor3 = Color3.fromRGB(42, 201, 63), Size = UDim2.new(0, 12, 0, 12), Parent = dots, BorderSizePixel = 0, ["Name"] = "Green" , ZIndex = 2, children = {new("UICorner", {CornerRadius = UDim.new(1,0)})} })
+		new("TextLabel", { Name = "Title", Size = UDim2.new(1, -160, 1, 0), Position = UDim2.new(0.5, -0.5*(1-160/frame.AbsoluteSize.X), 0.5, -16), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Text = blockTitle, Font = Config.Fonts.Default, TextSize = 13, TextColor3 = self._theme.Text, Parent = header })
+		local copyBtn = new("TextButton", { Name = "Copy", Size = UDim2.new(0, 80, 1, 0), Position = UDim2.new(1, -80, 0, 0), BackgroundTransparency = 1, Text = Config.Icons.Copy .. " Copy", Font = Config.Fonts.Default, TextSize = 13, TextColor3 = self._theme.Muted, Parent = header })
+		new("Frame", {Name = "Divider", Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = self._theme.Window, BorderSizePixel=0, Parent = frame})
+
+		-- Editor
+		local editor = new("Frame", { Name = "Editor", Size = UDim2.new(1, 0, 1, -33), BackgroundTransparency = 1, Parent = frame })
+		local lineNumbers = new("TextLabel", { Name = "LineNumbers", Size = UDim2.new(0, 30, 1, -16), Position = UDim2.new(0, 5, 0, 8), BackgroundTransparency = 1, Font = Config.Fonts.Code, Text = "1", TextSize = 14, TextColor3 = self._theme.Muted, TextYAlignment = Enum.TextYAlignment.Top, Parent = editor })
+		local codeInput = new("TextBox", { Name = "CodeInput", Size = UDim2.new(1, -40, 1, -16), Position = UDim2.new(0, 35, 0, 8), BackgroundTransparency = 1, MultiLine = true, ClearTextOnFocus = false, Font = Config.Fonts.Code, Text = text or "", TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, TextSize = 14, TextColor3 = self._theme.CodeSyntax.Default, Parent = editor })
+		
+		-- Line number logic
+		local function updateLineNumbers()
+			local lines = codeInput.Text:split("\n")
+			local numStr = ""
+			for i = 1, #lines do numStr = numStr .. tostring(i) .. "\n" end
+			lineNumbers.Text = numStr
+		end
+		codeInput:GetPropertyChangedSignal("Text"):Connect(updateLineNumbers)
+		updateLineNumbers() -- Initial update
+		
+		copyBtn.MouseButton1Click:Connect(function() print("Copy functionality not implemented in this environment.") end)
+		return codeInput
+	end
+	
+	function sectionAPI:AddToggle(labelText, subText, callback)
+		local frame = new("Frame", { Name = "ToggleRow", Size = UDim2.new(1, 0, 0, 40), BackgroundColor3 = self._theme.Section, Parent = contentHolder })
+		new("UICorner", { CornerRadius = UDim.new(0, 8), Parent = frame })
+		local labelFrame = new("Frame", { Name = "Labels", Size = UDim2.new(1, -60, 1, 0), Position = UDim2.new(0, 12, 0, 0), BackgroundTransparency = 1, Parent = frame })
+		new("UIListLayout", { Parent = labelFrame, Padding = UDim.new(0, -2), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center })
+		new("TextLabel", { Name = "Label", Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1, Text = labelText, Font = Config.Fonts.Bold, TextSize = 14, TextColor3 = self._theme.Text, TextXAlignment = Enum.TextXAlignment.Left, Parent = labelFrame })
+		new("TextLabel", { Name = "SubLabel", Size = UDim2.new(1, 0, 0, 15), BackgroundTransparency = 1, Text = subText, Font = Config.Fonts.Default, TextSize = 12, TextColor3 = self._theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, Parent = labelFrame })
+		
+		local btn = new("TextButton", { Name = "ToggleIcon", Size = UDim2.new(0, 40, 0, 40), Position = UDim2.new(1, -45, 0, 0), BackgroundTransparency = 1, Font = Config.Fonts.Default, Text = Config.Icons.Toggle, TextSize = 24, TextColor3 = self._theme.Muted, Parent = frame })
+		btn.MouseButton1Click:Connect(function() pcall(callback) end) -- This is now just a button, state must be handled externally
 		return btn
 	end
 	
-	function sectionAPI:AddToggle(text, default, callback)
-		local state = default or false
-		local frame = new("Frame", { Name = "ToggleRow", Size = UDim2.new(1, 0, 0, 26), BackgroundTransparency = 1, Parent = contentHolder })
-		local lbl = new("TextLabel", { Name = "TLabel", Size = UDim2.new(1, -60, 1, 0), Font = Config.Fonts.Default, Text = text or "Toggle", TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, BackgroundTransparency = 1, Parent = frame })
-		local toggleBg = new("TextButton", { Name = "Toggle", Size = UDim2.new(0, 44, 0, 24), Position = UDim2.new(1, -44, 0.5, -12), BorderSizePixel = 0, Text = "", Parent = frame })
-		new("UICorner", { CornerRadius = UDim.new(0, 12), Parent = toggleBg })
-		local knob = new("Frame", { Name = "Knob", Size = UDim2.new(0, 18, 0, 18), Position = UDim2.new(0, 3, 0.5, -9), BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, Parent = toggleBg })
-		new("UICorner", { CornerRadius = UDim.new(0, 9), Parent = knob })
-
-		table.insert(self._themedElements, {obj = lbl, prop = "TextColor3", value = "Text"})
-		
-		local function setState(newState, silent)
-			state = newState
-			local knobPos = state and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
-			local bgColor = state and theme.Primary or theme.Border
-			
-			TweenService:Create(knob, TweenInfo.new(Config.Durations.Toggle, Enum.EasingStyle.Quad), { Position = knobPos }):Play()
-			TweenService:Create(toggleBg, TweenInfo.new(Config.Durations.Toggle), { BackgroundColor3 = bgColor }):Play()
-			
-			if not silent and callback then pcall(callback, state) end
-		end
-
-		toggleBg.MouseButton1Click:Connect(function() setState(not state) end)
-		setState(state, true) -- Set initial state without firing callback
-		return { Get = function() return state end, Set = setState }
-	end
-	
-	-- Other components would follow a similar refactored pattern...
-	
-	updateSectionHeight() -- Initial size calculation
+	updateCanvas() -- Call initially
 	return sectionAPI
 end
 
+-- Allow module call syntax
 return setmetatable(FrostUI, {
 	__call = function(_, ...) return FrostUI:CreateWindow(...) end
 })
