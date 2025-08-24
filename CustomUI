@@ -1,272 +1,199 @@
---[=[
- d888b  db    db d888888b      .d888b.      db      db    db  .d8b.
-88' Y8b 88    88   `88'        VP  `8D      88      88    88 d8' `8b
-88      88    88    88            odD'      88      88    88 88ooo88
-88  ooo 88    88    88          .88'        88      88    88 88~~~88
-88. ~8~ 88b  d88   .88.        j88.         88booo. 88b  d88 88   88    @uniquadev
- Y888P  ~Y8888P' Y888888P      888888D      Y88888P ~Y8888P' YP   YP  CONVERTER
-]=]
-
--- Instances: 12 | Scripts: 0 | Modules: 0 | Tags: 0
+--[[
+    FrostsHub Style 3 UI Library
+    - Faithfully recreates the visual style from your provided image and code.
+]]
 
 local FrostsHub = {}
 FrostsHub.__index = FrostsHub
 
-function FrostsHub.new()
-	local self = setmetatable({}, FrostsHub)
-	self.ScreenGui = Instance.new("ScreenGui")
-	self.ScreenGui.Name = "FrostsHub_UI"
-	self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	return self
+local PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main container for all created elements
+local Elements = {}
+
+-- Utility function for creating rounded corners
+local function addCorner(instance)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4) -- A subtle rounding looks best
+    corner.Parent = instance
 end
 
-function FrostsHub:CreateWindow(title)
-	local window = {}
-	
-	local MainFrame = Instance.new("Frame")
-	MainFrame.Name = "MainFrame"
-	MainFrame.Size = UDim2.new(0, 426, 0, 319)
-	MainFrame.Position = UDim2.new(0.5, -213, 0.5, -160)
-	MainFrame.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
-	MainFrame.BorderSizePixel = 0
-	MainFrame.Parent = self.ScreenGui
+function FrostsHub:Window(title)
+    local self = setmetatable({}, FrostsHub)
+    
+    -- 1. Create the ScreenGui
+    self.ScreenGui = Instance.new("ScreenGui")
+    self.ScreenGui.Name = "FrostsHub_UI"
+    self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    self.ScreenGui.Parent = PlayerGui
+    table.insert(Elements, self.ScreenGui)
 
-	Instance.new("UICorner", MainFrame)
+    -- 2. Create the Main Frame (Dark background)
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 426, 0, 319)
+    MainFrame.Position = UDim2.new(0.5, -213, 0.5, -160)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = self.ScreenGui
+    addCorner(MainFrame)
 
-	local UiName = Instance.new("TextLabel", MainFrame)
-	UiName.Name = "UiName"
-	UiName.Size = UDim2.new(1, 0, 0, 50)
-	UiName.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
-	UiName.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
-	UiName.Text = title or "FrostsHub"
-	UiName.TextColor3 = Color3.fromRGB(255, 255, 255)
-	UiName.TextSize = 14
-	UiName.BorderSizePixel = 0
+    -- 3. Create the Title Label
+    local UiName = Instance.new("TextLabel", MainFrame)
+    UiName.Name = "UiName"
+    UiName.Size = UDim2.new(0, 200, 0, 50)
+    UiName.Position = UDim2.new(0.3, 0, 0, 0)
+    UiName.BackgroundTransparency = 1
+    UiName.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
+    UiName.Text = title or "FrostsHub Style 3"
+    UiName.TextColor3 = Color3.fromRGB(255, 255, 255)
+    UiName.TextSize = 16
+    UiName.TextXAlignment = Enum.TextXAlignment.Left
 
-	Instance.new("UICorner", UiName)
+    -- 4. Create the Divider Line
+    local Divider = Instance.new("Frame")
+    Divider.Name = "Divider"
+    Divider.BackgroundColor3 = Color3.fromRGB(43, 43, 43)
+    Divider.BorderSizePixel = 0
+    Divider.Size = UDim2.new(1, 0, 0, 1)
+    Divider.Position = UDim2.new(0, 0, 0, 50)
+    Divider.Parent = MainFrame
 
-	local Divider = Instance.new("Frame", MainFrame)
-	Divider.Name = "Divider"
-	Divider.Size = UDim2.new(1, -20, 0, 1)
-	Divider.Position = UDim2.new(0.5, 0, 0, 50)
-	Divider.AnchorPoint = Vector2.new(0.5, 0.5)
-	Divider.BackgroundColor3 = Color3.fromRGB(43, 43, 43)
-	Divider.BorderSizePixel = 0
-	
-	window.Frame = MainFrame
-	
-	function window:AddTab(text)
-		local TabButton = Instance.new("TextButton")
-		TabButton.Name = text .. "_Tab"
-		TabButton.Size = UDim2.new(0, 105, 0, 37)
-		TabButton.BackgroundColor3 = Color3.fromRGB(117, 52, 255)
-		TabButton.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
-		TabButton.Text = text
-		TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-		TabButton.TextSize = 14
-		TabButton.BorderSizePixel = 0
-		TabButton.Parent = MainFrame
-		
-		Instance.new("UICorner", TabButton)
-		
-		local TabContent = Instance.new("Frame")
-		TabContent.Name = text .. "_Content"
-		TabContent.Size = UDim2.new(1, -20, 1, -120)
-		TabContent.Position = UDim2.new(0.5, 0, 0, 100)
-		TabContent.AnchorPoint = Vector2.new(0.5, 0)
-		TabContent.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-		TabContent.BorderSizePixel = 0
-		TabContent.Visible = false -- Initially hidden
-		TabContent.Parent = MainFrame
-		
-		Instance.new("UICorner", TabContent)
-		
-		TabButton.MouseButton1Click:Connect(function()
-			for _, child in ipairs(MainFrame:GetChildren()) do
-				if child:IsA("Frame") and child.Name:match("_Content$") then
-					child.Visible = false
-				end
-			end
-			TabContent.Visible = true
-		end)
-		
-		return TabContent
-	end
-
-	return window
+    -- Container for tab buttons
+    local TabsContainer = Instance.new("Frame", MainFrame)
+    TabsContainer.Size = UDim2.new(1, 0, 0, 50)
+    TabsContainer.BackgroundTransparency = 1
+    local tabsListLayout = Instance.new("UIListLayout", TabsContainer)
+    tabsListLayout.FillDirection = Enum.FillDirection.Horizontal
+    tabsListLayout.Padding = UDim.new(0, 10)
+    tabsListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    
+    self.MainFrame = MainFrame
+    self.TabsContainer = TabsContainer
+    self.ActiveTabContent = nil
+    
+    return self
 end
 
-function FrostsHub:CreateButton(parent, text, callback)
-	local Button = Instance.new("TextButton")
-	Button.Name = text .. "_Button"
-	Button.Size = UDim2.new(1, -20, 0, 30)
-	Button.Position = UDim2.new(0.5, 0, 0, 0)
-	Button.AnchorPoint = Vector2.new(0.5, 0)
-	Button.BackgroundColor3 = Color3.fromRGB(117, 52, 255)
-	Button.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
-	Button.Text = text
-	Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Button.TextSize = 14
-	Button.BorderSizePixel = 0
-	Button.Parent = parent
-	
-	Instance.new("UICorner", Button)
-	
-	if callback then
-		Button.MouseButton1Click:Connect(callback)
-	end
-	
-	return Button
+function FrostsHub:Tab(text)
+    -- Create the content frame for this tab first
+    local ContentFrame = Instance.new("Frame")
+    ContentFrame.Name = "ContentFrame"
+    ContentFrame.Size = UDim2.new(1, -20, 1, -70)
+    ContentFrame.Position = UDim2.new(0.5, 0, 0, 60)
+    ContentFrame.AnchorPoint = Vector2.new(0.5, 0)
+    ContentFrame.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+    ContentFrame.BorderSizePixel = 0
+    ContentFrame.Visible = false -- Hide by default
+    ContentFrame.Parent = self.MainFrame
+    addCorner(ContentFrame)
+    
+    local contentListLayout = Instance.new("UIListLayout", ContentFrame)
+    contentListLayout.Padding = UDim.new(0, 10)
+    contentListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    contentListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    
+    -- Create the Tab Button
+    local TabButton = Instance.new("TextButton")
+    TabButton.Name = text .. "Tab"
+    TabButton.Size = UDim2.new(0, 105, 0, 37)
+    TabButton.BackgroundColor3 = Color3.fromRGB(117, 52, 255)
+    TabButton.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
+    TabButton.Text = text
+    TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TabButton.TextSize = 14
+    TabButton.Parent = self.TabsContainer
+    addCorner(TabButton)
+    
+    TabButton.MouseButton1Click:Connect(function()
+        -- Hide all other content frames
+        for _, child in ipairs(self.MainFrame:GetChildren()) do
+            if child.Name == "ContentFrame" then
+                child.Visible = false
+            end
+        end
+        -- Show this tab's content
+        ContentFrame.Visible = true
+        self.ActiveTabContent = ContentFrame
+    end)
+    
+    -- If this is the first tab, make it active
+    if not self.ActiveTabContent then
+        ContentFrame.Visible = true
+        self.ActiveTabContent = ContentFrame
+    end
+    
+    return ContentFrame -- Return the frame where elements will be placed
 end
 
-function FrostsHub:CreateToggle(parent, text, callback)
-	local ToggleFrame = Instance.new("Frame")
-	ToggleFrame.Name = text .. "_Toggle"
-	ToggleFrame.Size = UDim2.new(1, -20, 0, 30)
-	ToggleFrame.Position = UDim2.new(0.5, 0, 0, 0)
-	ToggleFrame.AnchorPoint = Vector2.new(0.5, 0)
-	ToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-	ToggleFrame.BorderSizePixel = 0
-	ToggleFrame.Parent = parent
-	
-	Instance.new("UICorner", ToggleFrame)
-	
-	local ToggleButton = Instance.new("TextButton")
-	ToggleButton.Size = UDim2.new(0, 20, 0.8, 0)
-	ToggleButton.Position = UDim2.new(0, 5, 0.5, 0)
-	ToggleButton.AnchorPoint = Vector2.new(0, 0.5)
-	ToggleButton.BackgroundColor3 = Color3.fromRGB(117, 52, 255)
-	ToggleButton.Text = ""
-	ToggleButton.BorderSizePixel = 0
-	ToggleButton.Parent = ToggleFrame
-	
-	Instance.new("UICorner", ToggleButton)
-	
-	local ToggleLabel = Instance.new("TextLabel")
-	ToggleLabel.Size = UDim2.new(1, -35, 1, 0)
-	ToggleLabel.Position = UDim2.new(1, -5, 0.5, 0)
-	ToggleLabel.AnchorPoint = Vector2.new(1, 0.5)
-	ToggleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	ToggleLabel.BackgroundTransparency = 1
-	ToggleLabel.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular)
-	ToggleLabel.Text = text
-	ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	ToggleLabel.TextSize = 14
-	ToggleLabel.TextXAlignment = Enum.TextXAlignment.Right
-	ToggleLabel.Parent = ToggleFrame
-	
-	local toggled = false
-	ToggleFrame.MouseButton1Click:Connect(function()
-		toggled = not toggled
-		if toggled then
-			ToggleButton:TweenPosition(UDim2.new(1, -25, 0.5, 0), "Out", "Quad", 0.2, true)
-		else
-			ToggleButton:TweenPosition(UDim2.new(0, 5, 0.5, 0), "Out", "Quad", 0.2, true)
-		end
-		if callback then
-			callback(toggled)
-		end
-	end)
-	
-	return ToggleFrame
+function FrostsHub:Button(parent, text, callback)
+    local Button = Instance.new("TextButton")
+    Button.Name = "Button"
+    Button.Size = UDim2.new(1, -20, 0, 40)
+    Button.BackgroundColor3 = Color3.fromRGB(117, 52, 255)
+    Button.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
+    Button.Text = text
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 14
+    Button.Parent = parent
+    addCorner(Button)
+    
+    if callback then
+        Button.MouseButton1Click:Connect(callback)
+    end
+    return Button
 end
 
-function FrostsHub:CreateDropdown(parent, text, options)
-	local DropdownFrame = Instance.new("Frame")
-	DropdownFrame.Name = text .. "_Dropdown"
-	DropdownFrame.Size = UDim2.new(1, -20, 0, 30)
-	DropdownFrame.Position = UDim2.new(0.5, 0, 0, 0)
-	DropdownFrame.AnchorPoint = Vector2.new(0.5, 0)
-	DropdownFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-	DropdownFrame.BorderSizePixel = 0
-	DropdownFrame.Parent = parent
-	
-	Instance.new("UICorner", DropdownFrame)
-	
-	local DropdownButton = Instance.new("TextButton")
-	DropdownButton.Size = UDim2.new(1, 0, 1, 0)
-	DropdownButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	DropdownButton.BackgroundTransparency = 1
-	DropdownButton.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular)
-	DropdownButton.Text = text
-	DropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	DropdownButton.TextSize = 14
-	DropdownButton.Parent = DropdownFrame
-
-	local OptionsFrame = Instance.new("Frame")
-	OptionsFrame.Size = UDim2.new(1, 0, 0, #options * 30)
-	OptionsFrame.Position = UDim2.new(0, 0, 1, 0)
-	OptionsFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-	OptionsFrame.BorderSizePixel = 0
-	OptionsFrame.Visible = false
-	OptionsFrame.Parent = DropdownFrame
-	OptionsFrame.ClipsDescendants = true
-	
-	Instance.new("UICorner", OptionsFrame)
-	
-	local ListLayout = Instance.new("UIListLayout", OptionsFrame)
-	ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	
-	for i, optionText in ipairs(options) do
-		local OptionButton = Instance.new("TextButton")
-		OptionButton.Size = UDim2.new(1, 0, 0, 30)
-		OptionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		OptionButton.BackgroundTransparency = 1
-		OptionButton.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular)
-		OptionButton.Text = optionText
-		OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-		OptionButton.TextSize = 14
-		OptionButton.Parent = OptionsFrame
-		
-		OptionButton.MouseButton1Click:Connect(function()
-			DropdownButton.Text = optionText
-			OptionsFrame.Visible = false
-		end)
-	end
-	
-	DropdownButton.MouseButton1Click:Connect(function()
-		OptionsFrame.Visible = not OptionsFrame.Visible
-	end)
-
-	return DropdownFrame
+function FrostsHub:Toggle(parent, text, callback)
+    local toggled = false
+    
+    -- Main container for the toggle element
+    local ToggleFrame = Instance.new("TextButton") -- Using a TextButton for the background makes it clickable
+    ToggleFrame.Name = "Toggle"
+    ToggleFrame.Size = UDim2.new(1, -20, 0, 30)
+    ToggleFrame.BackgroundTransparency = 1
+    ToggleFrame.Text = ""
+    ToggleFrame.Parent = parent
+    
+    -- The small purple square indicator
+    local Indicator = Instance.new("Frame", ToggleFrame)
+    Indicator.Size = UDim2.new(0, 20, 0, 20)
+    Indicator.Position = UDim2.new(0, 0, 0.5, 0)
+    Indicator.AnchorPoint = Vector2.new(0, 0.5)
+    Indicator.BackgroundColor3 = Color3.fromRGB(45, 45, 45) -- Off color
+    addCorner(Indicator)
+    
+    -- The text label
+    local Label = Instance.new("TextLabel", ToggleFrame)
+    Label.Size = UDim2.new(1, -30, 1, 0)
+    Label.Position = UDim2.new(0, 30, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Normal)
+    Label.Text = text
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.TextSize = 14
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    ToggleFrame.MouseButton1Click:Connect(function()
+        toggled = not toggled
+        if toggled then
+            Indicator.BackgroundColor3 = Color3.fromRGB(117, 52, 255) -- On color
+        else
+            Indicator.BackgroundColor3 = Color3.fromRGB(45, 45, 45) -- Off color
+        end
+        if callback then
+            callback(toggled)
+        end
+    end)
+    return ToggleFrame
 end
 
--- Example Usage:
-local function Example()
-	local UI = FrostsHub.new()
-	UI.ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-
-	local MainWindow = UI:CreateWindow("FrostsHub Style 3")
-
-	local MainTab = MainWindow:AddTab("Main")
-	MainTab.Visible = true -- Show the first tab by default
-	
-	local ListLayout = Instance.new("UIListLayout", MainTab)
-	ListLayout.Padding = UDim.new(0, 5)
-	ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-	UI:CreateButton(MainTab, "Example Button", function()
-		print("Button Clicked!")
-	end)
-	
-	UI:CreateToggle(MainTab, "Example Toggle", function(value)
-		print("Toggle is now:", value)
-	end)
-	
-	UI:CreateDropdown(MainTab, "Select an Option", {"Option 1", "Option 2", "Option 3"})
-
-	local SettingsTab = MainWindow:AddTab("Settings")
-	
-	local SettingsListLayout = Instance.new("UIListLayout", SettingsTab)
-	SettingsListLayout.Padding = UDim.new(0, 5)
-	SettingsListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	
-	UI:CreateButton(SettingsTab, "Another Button", function()
-		print("Another Button Clicked!")
-	end)
+-- Function to destroy the UI if needed
+function FrostsHub:Destroy()
+    for _, obj in pairs(Elements) do
+        obj:Destroy()
+    end
+    Elements = {}
 end
-
--- To run the example, simply call the Example function.
-Example()
 
 return FrostsHub
